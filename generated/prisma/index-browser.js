@@ -121,11 +121,73 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.AccountScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  dirPath: 'dirPath'
+};
+
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  dirPath: 'dirPath'
+};
+
+exports.Prisma.AgentScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  tools: 'tools',
+  model: 'model',
+  color: 'color',
+  filePath: 'filePath',
+  content: 'content',
+  source: 'source',
+  accountId: 'accountId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.SkillScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  author: 'author',
+  version: 'version',
+  dirPath: 'dirPath',
+  content: 'content',
+  source: 'source',
+  hasExamples: 'hasExamples',
+  hasScripts: 'hasScripts',
+  accountId: 'accountId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.CommandScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  filePath: 'filePath',
+  content: 'content',
+  source: 'source',
+  accountId: 'accountId',
+  projectId: 'projectId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.PluginScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  author: 'author',
+  category: 'category',
+  dirPath: 'dirPath',
+  accountId: 'accountId'
+};
+
+exports.Prisma.ScanStatusScalarFieldEnum = {
+  id: 'id',
+  lastScan: 'lastScan',
+  itemCount: 'itemCount'
 };
 
 exports.Prisma.SortOrder = {
@@ -138,9 +200,20 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
-  Post: 'Post'
+  Account: 'Account',
+  Project: 'Project',
+  Agent: 'Agent',
+  Skill: 'Skill',
+  Command: 'Command',
+  Plugin: 'Plugin',
+  ScanStatus: 'ScanStatus'
 };
 
 /**

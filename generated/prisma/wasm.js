@@ -93,11 +93,73 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
+exports.Prisma.AccountScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  dirPath: 'dirPath'
+};
+
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  dirPath: 'dirPath'
+};
+
+exports.Prisma.AgentScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  tools: 'tools',
+  model: 'model',
+  color: 'color',
+  filePath: 'filePath',
+  content: 'content',
+  source: 'source',
+  accountId: 'accountId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.SkillScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  author: 'author',
+  version: 'version',
+  dirPath: 'dirPath',
+  content: 'content',
+  source: 'source',
+  hasExamples: 'hasExamples',
+  hasScripts: 'hasScripts',
+  accountId: 'accountId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.CommandScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  filePath: 'filePath',
+  content: 'content',
+  source: 'source',
+  accountId: 'accountId',
+  projectId: 'projectId',
+  pluginId: 'pluginId'
+};
+
+exports.Prisma.PluginScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  author: 'author',
+  category: 'category',
+  dirPath: 'dirPath',
+  accountId: 'accountId'
+};
+
+exports.Prisma.ScanStatusScalarFieldEnum = {
+  id: 'id',
+  lastScan: 'lastScan',
+  itemCount: 'itemCount'
 };
 
 exports.Prisma.SortOrder = {
@@ -110,9 +172,20 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
-  Post: 'Post'
+  Account: 'Account',
+  Project: 'Project',
+  Agent: 'Agent',
+  Skill: 'Skill',
+  Command: 'Command',
+  Plugin: 'Plugin',
+  ScanStatus: 'ScanStatus'
 };
 /**
  * Create the Client
@@ -153,7 +226,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -162,13 +234,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Post {\n  id        Int      @id @default(autoincrement())\n  name      String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@index([name])\n}\n",
-  "inlineSchemaHash": "4dfee2d805d63053d5ae63a6ff65a5c68e353713bdd4147909d9158ea83d8e0f",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Account {\n  id       String    @id @default(cuid())\n  name     String\n  dirPath  String    @unique\n  agents   Agent[]\n  skills   Skill[]\n  commands Command[]\n  plugins  Plugin[]\n}\n\nmodel Project {\n  id       String    @id @default(cuid())\n  name     String\n  dirPath  String    @unique\n  commands Command[]\n}\n\nmodel Agent {\n  id          String  @id @default(cuid())\n  name        String\n  description String?\n  tools       String?\n  model       String?\n  color       String?\n  filePath    String  @unique\n  content     String\n  source      String  @default(\"account\")\n  accountId   String\n  account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)\n  pluginId    String?\n  plugin      Plugin? @relation(fields: [pluginId], references: [id], onDelete: Cascade)\n}\n\nmodel Skill {\n  id          String  @id @default(cuid())\n  name        String\n  description String?\n  author      String?\n  version     String?\n  dirPath     String  @unique\n  content     String\n  source      String  @default(\"account\")\n  hasExamples Boolean @default(false)\n  hasScripts  Boolean @default(false)\n  accountId   String\n  account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)\n  pluginId    String?\n  plugin      Plugin? @relation(fields: [pluginId], references: [id], onDelete: Cascade)\n}\n\nmodel Command {\n  id          String   @id @default(cuid())\n  name        String\n  description String?\n  filePath    String   @unique\n  content     String\n  source      String   @default(\"account\")\n  accountId   String?\n  account     Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)\n  projectId   String?\n  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)\n  pluginId    String?\n  plugin      Plugin?  @relation(fields: [pluginId], references: [id], onDelete: Cascade)\n}\n\nmodel Plugin {\n  id          String    @id @default(cuid())\n  name        String\n  description String?\n  author      String?\n  category    String?\n  dirPath     String    @unique\n  accountId   String\n  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)\n  agents      Agent[]\n  skills      Skill[]\n  commands    Command[]\n}\n\nmodel ScanStatus {\n  id        String   @id @default(\"singleton\")\n  lastScan  DateTime @default(now())\n  itemCount Int      @default(0)\n}\n",
+  "inlineSchemaHash": "24918f3579f90e5102df6bcb5563a3fa19192c7d038014f98ddbea85e9d2413f",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Account\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dirPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"agents\",\"kind\":\"object\",\"type\":\"Agent\",\"relationName\":\"AccountToAgent\"},{\"name\":\"skills\",\"kind\":\"object\",\"type\":\"Skill\",\"relationName\":\"AccountToSkill\"},{\"name\":\"commands\",\"kind\":\"object\",\"type\":\"Command\",\"relationName\":\"AccountToCommand\"},{\"name\":\"plugins\",\"kind\":\"object\",\"type\":\"Plugin\",\"relationName\":\"AccountToPlugin\"}],\"dbName\":null},\"Project\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dirPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"commands\",\"kind\":\"object\",\"type\":\"Command\",\"relationName\":\"CommandToProject\"}],\"dbName\":null},\"Agent\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tools\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"model\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"color\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"filePath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"source\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"account\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToAgent\"},{\"name\":\"pluginId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"plugin\",\"kind\":\"object\",\"type\":\"Plugin\",\"relationName\":\"AgentToPlugin\"}],\"dbName\":null},\"Skill\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"author\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"version\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dirPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"source\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hasExamples\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"hasScripts\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"accountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"account\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToSkill\"},{\"name\":\"pluginId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"plugin\",\"kind\":\"object\",\"type\":\"Plugin\",\"relationName\":\"PluginToSkill\"}],\"dbName\":null},\"Command\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"filePath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"source\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"account\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToCommand\"},{\"name\":\"projectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"project\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"CommandToProject\"},{\"name\":\"pluginId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"plugin\",\"kind\":\"object\",\"type\":\"Plugin\",\"relationName\":\"CommandToPlugin\"}],\"dbName\":null},\"Plugin\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"author\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dirPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"account\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToPlugin\"},{\"name\":\"agents\",\"kind\":\"object\",\"type\":\"Agent\",\"relationName\":\"AgentToPlugin\"},{\"name\":\"skills\",\"kind\":\"object\",\"type\":\"Skill\",\"relationName\":\"PluginToSkill\"},{\"name\":\"commands\",\"kind\":\"object\",\"type\":\"Command\",\"relationName\":\"CommandToPlugin\"}],\"dbName\":null},\"ScanStatus\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastScan\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"itemCount\",\"kind\":\"scalar\",\"type\":\"Int\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
