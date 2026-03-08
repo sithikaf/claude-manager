@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function PluginsPage() {
   const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null);
@@ -69,7 +70,10 @@ export default function PluginsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Plugins</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Plugins</h2>
+        <Link href="/marketplace?category=plugin" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
+      </div>
 
       <Tabs defaultValue="installed">
         <TabsList>

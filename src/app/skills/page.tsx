@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import Link from "next/link";
 
 export default function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
@@ -23,7 +24,10 @@ export default function SkillsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Skills</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Skills</h2>
+          <Link href="/marketplace?category=skill" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
+        </div>
         <Select value={accountFilter} onValueChange={setAccount}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="All accounts" />

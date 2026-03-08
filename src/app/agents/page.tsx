@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import Link from "next/link";
 
 export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
@@ -26,7 +27,10 @@ export default function AgentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Agents</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Agents</h2>
+          <Link href="/marketplace?category=agent" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
+        </div>
         <div className="flex gap-2">
           <Select value={accountFilter} onValueChange={setAccount}>
             <SelectTrigger className="w-48">

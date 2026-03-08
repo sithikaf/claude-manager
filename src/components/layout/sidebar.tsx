@@ -14,6 +14,7 @@ const navItems = [
   { href: "/commands", label: "Commands", icon: "Terminal" },
   { href: "/plugins", label: "Plugins", icon: "Puzzle" },
   { href: "/mcp-servers", label: "MCP Servers", icon: "Server" },
+  { href: "/marketplace", label: "Marketplace", icon: "Store" },
   { href: "/deploy", label: "Deploy", icon: "Rocket" },
 ];
 
@@ -24,6 +25,7 @@ const icons: Record<string, string> = {
   Terminal: "💻",
   Puzzle: "🧩",
   Server: "🔌",
+  Store: "🏪",
   Rocket: "🚀",
 };
 

@@ -112,3 +112,36 @@ model ScanStatus {
     lastScan  DateTime @default(now())
     itemCount Int      @default(0)
 }
+
+model MarketplaceItem {
+    id             String   @id @default(cuid())
+    externalId     String
+    category       String
+    source         String
+    name           String
+    description    String?
+    author         String?
+    version        String?
+    tags           String?
+    repositoryUrl  String?
+    homepage       String?
+    downloadCount  Int?
+    stars          Int?
+    transportType  String?
+    packageName    String?
+    installCommand String?
+    installConfig  String?
+    rawData        String?
+    fetchedAt      DateTime @default(now())
+
+    @@unique([source, externalId])
+    @@index([category])
+}
+
+model MarketplaceSyncStatus {
+    id        String   @id
+    lastSync  DateTime @default(now())
+    itemCount Int      @default(0)
+    status    String   @default("idle")
+    error     String?
+}

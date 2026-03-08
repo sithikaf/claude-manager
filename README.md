@@ -21,92 +21,73 @@ Built with the [T3 Stack](https://create.t3.gg/) -- Next.js 15, tRPC, Prisma, Ta
 
 - **Framework:** [Next.js 15](https://nextjs.org/) (App Router, Turbopack)
 - **API:** [tRPC](https://trpc.io/) with [React Query](https://tanstack.com/query)
-- **Database:** [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
+- **Database:** [SQLite](https://www.sqlite.org/) (default) or [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
 - **Language:** TypeScript
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
-- [PostgreSQL](https://www.postgresql.org/) (or [Docker](https://www.docker.com/) to run it)
 
 ## Quick Start
-
-### 1. Clone the repository
 
 ```bash
 git clone https://github.com/sithikaf/claude-manager.git
 cd claude-manager
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
-```
-
-### 3. Set up the database
-
-You have three options for running PostgreSQL:
-
-#### Option A: Docker Compose (recommended)
-
-```bash
-docker compose up -d
-```
-
-This starts a PostgreSQL 16 container on port 5432 with the default credentials from `.env.example`.
-
-#### Option B: Use the included script
-
-```bash
-cp .env.example .env
-./start-database.sh
-```
-
-The script will start a PostgreSQL container using Docker or Podman, and optionally generate a random password for you.
-
-#### Option C: Use your own PostgreSQL instance
-
-If you already have PostgreSQL running (locally or hosted), just update the `DATABASE_URL` in your `.env` file:
-
-```bash
-cp .env.example .env
-# Edit .env with your connection string:
-# DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/claude-manager"
-```
-
-This works with any PostgreSQL provider -- local installs, cloud-hosted databases (Supabase, Neon, Railway, etc.), or remote servers.
-
-### 4. Configure environment
-
-If you haven't already:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and update `DATABASE_URL` if your database credentials differ from the defaults.
-
-### 5. Push the database schema
-
-```bash
-npx prisma db push
-```
-
-### 6. Start the dev server
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) -- on first run, a setup wizard will guide you through database configuration.
+
+### Default: SQLite (zero config)
+
+The app uses SQLite by default. No database setup required -- just install and run.
+
+### Optional: PostgreSQL
+
+For production use, you can switch to PostgreSQL through the setup wizard or manually:
+
+#### Via setup wizard
+
+Select "PostgreSQL" on first run and enter your connection string.
+
+#### Via manual configuration
+
+1. Create a `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Update `DATABASE_URL` in `.env`:
+   ```
+   DATABASE_URL="postgresql://user:password@localhost:5432/claude-manager"
+   ```
+
+3. Update `prisma/schema.prisma` -- change `provider = "sqlite"` to `provider = "postgresql"`
+
+4. Push the schema and regenerate the client:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+#### Docker Compose (PostgreSQL)
+
+```bash
+docker compose up -d
+cp .env.example .env
+# Update .env with: DATABASE_URL="postgresql://postgres:password@localhost:5432/claude-manager"
+# Update prisma/schema.prisma provider to "postgresql"
+npx prisma generate && npx prisma db push
+npm run dev
+```
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/claude-manager` |
+| `DATABASE_URL` | Database connection string | `file:./data/claude-manager.db` (SQLite) |
 
 The environment schema is validated at build time via `src/env.js`. See that file for details.
 

@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import { Sidebar } from "~/components/layout/sidebar";
 import { Toaster } from "~/components/ui/sonner";
+import { SetupGate } from "~/components/setup/setup-gate";
 
 export const metadata: Metadata = {
   title: "Claude Dashboard",
@@ -24,10 +25,12 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable} dark`}>
       <body>
         <TRPCReactProvider>
-          <div className="flex h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto p-6">{children}</main>
-          </div>
+          <SetupGate>
+            <div className="flex h-screen">
+              <Sidebar />
+              <main className="flex-1 overflow-auto p-6">{children}</main>
+            </div>
+          </SetupGate>
           <Toaster />
         </TRPCReactProvider>
       </body>
