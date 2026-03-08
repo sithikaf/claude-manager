@@ -27,8 +27,8 @@ export async function scanAgents(basePath: string, source: string, pluginDirPath
       const { data, content } = matter(raw);
       agents.push({
         name: (data.name as string) ?? path.basename(file, ".md"),
-        description: data.description as string | undefined,
-        tools: data.tools as string | undefined,
+        description: data.description ? String(data.description).slice(0, 2000) : undefined,
+        tools: Array.isArray(data.tools) ? data.tools.join(", ") : (data.tools as string | undefined),
         model: data.model as string | undefined,
         color: data.color as string | undefined,
         filePath,

@@ -5,6 +5,7 @@ import { skillsRouter } from "~/server/api/routers/skills";
 import { commandsRouter } from "~/server/api/routers/commands";
 import { pluginsRouter } from "~/server/api/routers/plugins";
 import { deployRouter } from "~/server/api/routers/deploy";
+import { mcpServersRouter } from "~/server/api/routers/mcp-servers";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 export const appRouter = createTRPCRouter({
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   commands: commandsRouter,
   plugins: pluginsRouter,
   deploy: deployRouter,
+  mcpServers: mcpServersRouter,
 });
 
 export type AppRouter = typeof appRouter;

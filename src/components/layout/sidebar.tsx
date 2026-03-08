@@ -13,6 +13,7 @@ const navItems = [
   { href: "/skills", label: "Skills", icon: "Zap" },
   { href: "/commands", label: "Commands", icon: "Terminal" },
   { href: "/plugins", label: "Plugins", icon: "Puzzle" },
+  { href: "/mcp-servers", label: "MCP Servers", icon: "Server" },
   { href: "/deploy", label: "Deploy", icon: "Rocket" },
 ];
 
@@ -22,6 +23,7 @@ const icons: Record<string, string> = {
   Zap: "⚡",
   Terminal: "💻",
   Puzzle: "🧩",
+  Server: "🔌",
   Rocket: "🚀",
 };
 
@@ -41,8 +43,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="border-b p-4">
-        <h1 className="text-lg font-bold">Claude Dashboard</h1>
-        <p className="text-xs text-muted-foreground">Skills & Agents Manager</p>
+        <h1 className="text-lg font-bold">Claude Manager</h1>
+        <p className="text-xs text-muted-foreground">Agents, Skills & MCP Manager</p>
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

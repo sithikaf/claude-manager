@@ -121,7 +121,7 @@ export default function DeployPage() {
             <CardTitle className="text-base">1. Source Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <Select value={sourceAccount} onValueChange={(v) => { setSourceAccount(v); setSelectedItems(new Set()); }}>
+            <Select value={sourceAccount} onValueChange={(v: string | null) => { setSourceAccount(v ?? ""); setSelectedItems(new Set()); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select source..." />
               </SelectTrigger>
@@ -184,7 +184,7 @@ export default function DeployPage() {
             <CardTitle className="text-base">3. Target Account</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={targetAccount} onValueChange={setTargetAccount}>
+            <Select value={targetAccount} onValueChange={(v: string | null) => setTargetAccount(v ?? "")}>
               <SelectTrigger>
                 <SelectValue placeholder="Select target..." />
               </SelectTrigger>

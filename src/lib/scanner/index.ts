@@ -5,12 +5,14 @@ import { scanAgents } from "./agents";
 import { scanSkills } from "./skills";
 import { scanCommands } from "./commands";
 import { scanPlugins } from "./plugins";
+import { scanMcpServers } from "./mcp-servers";
 
 export async function runFullScan() {
   const accounts = await scanAccounts();
   const projects = await scanProjects();
 
   // Clear stale data
+  await db.mcpServer.deleteMany();
   await db.agent.deleteMany();
   await db.skill.deleteMany();
   await db.command.deleteMany();
@@ -79,6 +81,26 @@ export async function runFullScan() {
       totalItems++;
     }
 
+    // Scan account-level MCP servers
+    const mcpServers = await scanMcpServers(acc.dirPath, "account");
+    for (const mcp of mcpServers) {
+      await db.mcpServer.create({
+        data: {
+          name: mcp.name,
+          type: mcp.type,
+          command: mcp.command,
+          args: mcp.args,
+          url: mcp.url,
+          envVars: mcp.envVars,
+          scope: "account",
+          filePath: mcp.filePath,
+          config: mcp.config,
+          accountId: account.id,
+        },
+      });
+      totalItems++;
+    }
+
     // Scan plugins
     const plugins = await scanPlugins(acc.dirPath);
     for (const plug of plugins) {
@@ -139,6 +161,27 @@ export async function runFullScan() {
             filePath: cmd.filePath,
             content: cmd.content,
             source: "plugin",
+            accountId: account.id,
+            pluginId: plugin.id,
+          },
+        });
+        totalItems++;
+      }
+
+      // Scan plugin-level MCP servers
+      const pluginMcps = await scanMcpServers(acc.dirPath, "plugin", plug.dirPath);
+      for (const mcp of pluginMcps) {
+        await db.mcpServer.create({
+          data: {
+            name: mcp.name,
+            type: mcp.type,
+            command: mcp.command,
+            args: mcp.args,
+            url: mcp.url,
+            envVars: mcp.envVars,
+            scope: "plugin",
+            filePath: mcp.filePath,
+            config: mcp.config,
             accountId: account.id,
             pluginId: plugin.id,
           },

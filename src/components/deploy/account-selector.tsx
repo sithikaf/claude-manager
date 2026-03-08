@@ -27,7 +27,7 @@ export function AccountSelector({ accounts, projects, value, onChange, label, sh
   return (
     <div className="space-y-1">
       {label && <label className="text-sm font-medium">{label}</label>}
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={(v: string | null) => onChange(v ?? "")}>
         <SelectTrigger>
           <SelectValue placeholder="Select target..." />
         </SelectTrigger>

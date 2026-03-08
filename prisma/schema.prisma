@@ -9,13 +9,14 @@ datasource db {
 }
 
 model Account {
-    id       String    @id @default(cuid())
-    name     String
-    dirPath  String    @unique
-    agents   Agent[]
-    skills   Skill[]
-    commands Command[]
-    plugins  Plugin[]
+    id         String      @id @default(cuid())
+    name       String
+    dirPath    String      @unique
+    agents     Agent[]
+    skills     Skill[]
+    commands   Command[]
+    plugins    Plugin[]
+    mcpServers McpServer[]
 }
 
 model Project {
@@ -74,17 +75,36 @@ model Command {
 }
 
 model Plugin {
-    id          String    @id @default(cuid())
+    id          String      @id @default(cuid())
     name        String
     description String?
     author      String?
     category    String?
-    dirPath     String    @unique
+    dirPath     String      @unique
     accountId   String
-    account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    account     Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
     agents      Agent[]
     skills      Skill[]
     commands    Command[]
+    mcpServers  McpServer[]
+}
+
+model McpServer {
+    id       String  @id @default(cuid())
+    name     String
+    type     String  @default("stdio")
+    command  String?
+    args     String?
+    url      String?
+    envVars  String?
+    scope    String  @default("account")
+    filePath String
+    config   String
+
+    accountId String
+    account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    pluginId  String?
+    plugin    Plugin? @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 }
 
 model ScanStatus {
