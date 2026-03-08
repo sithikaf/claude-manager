@@ -140,6 +140,81 @@ export const marketplaceRouter = createTRPCRouter({
       return { success: true, name: item.name, settingsPath };
     }),
 
+  addCustomItem: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        category: z.enum(["skill", "agent", "mcp-server", "plugin"]),
+        description: z.string().optional(),
+        author: z.string().optional(),
+        repositoryUrl: z.string().optional(),
+        homepage: z.string().optional(),
+        transportType: z.string().optional(),
+        packageName: z.string().optional(),
+        installCommand: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const externalId = `custom:${input.name.toLowerCase().replace(/\s+/g, "-")}`;
+
+      // Build installConfig from installCommand if provided
+      let installConfig: string | null = null;
+      if (input.installCommand && input.category === "mcp-server") {
+        const parts = input.installCommand.split(" ");
+        installConfig = JSON.stringify({
+          command: parts[0],
+          args: parts.slice(1),
+          env: {},
+        });
+      }
+
+      return await ctx.db.marketplaceItem.upsert({
+        where: {
+          source_externalId: { source: "custom", externalId },
+        },
+        create: {
+          externalId,
+          category: input.category,
+          source: "custom",
+          name: input.name,
+          description: input.description ?? null,
+          author: input.author ?? null,
+          repositoryUrl: input.repositoryUrl ?? null,
+          homepage: input.homepage ?? null,
+          transportType: input.transportType ?? null,
+          packageName: input.packageName ?? null,
+          installCommand: input.installCommand ?? null,
+          installConfig,
+          tags: input.tags ? JSON.stringify(input.tags) : null,
+        },
+        update: {
+          description: input.description ?? null,
+          author: input.author ?? null,
+          repositoryUrl: input.repositoryUrl ?? null,
+          homepage: input.homepage ?? null,
+          transportType: input.transportType ?? null,
+          packageName: input.packageName ?? null,
+          installCommand: input.installCommand ?? null,
+          installConfig,
+          tags: input.tags ? JSON.stringify(input.tags) : null,
+          fetchedAt: new Date(),
+        },
+      });
+    }),
+
+  removeCustomItem: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const item = await ctx.db.marketplaceItem.findUnique({
+        where: { id: input.id },
+      });
+      if (!item) throw new Error("Item not found");
+      if (item.source !== "custom") throw new Error("Only custom items can be removed");
+      await ctx.db.marketplaceItem.delete({ where: { id: input.id } });
+      return { success: true };
+    }),
+
   installPlugin: publicProcedure
     .input(
       z.object({

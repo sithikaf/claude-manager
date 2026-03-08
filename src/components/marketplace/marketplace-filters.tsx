@@ -20,6 +20,8 @@ const sourceLabels: Record<string, string> = {
   "awesome-skills": "Awesome Skills",
   "awesome-plugins": "Awesome Plugins",
   "local-marketplace": "Local Marketplace",
+  curated: "Curated",
+  custom: "Custom",
 };
 
 export function MarketplaceFilters({

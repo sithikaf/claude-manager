@@ -5,6 +5,7 @@ import { awesomeMcpServersFetcher } from "./awesome-mcp-servers";
 import { awesomeSkillsFetcher } from "./awesome-skills";
 import { awesomePluginsFetcher } from "./awesome-plugins";
 import { localMarketplaceFetcher } from "./local-marketplace";
+import { curatedFetcher } from "./curated";
 
 export const allFetchers: SourceFetcher[] = [
   mcpRegistryFetcher,
@@ -13,4 +14,5 @@ export const allFetchers: SourceFetcher[] = [
   awesomeSkillsFetcher,
   awesomePluginsFetcher,
   localMarketplaceFetcher,
+  curatedFetcher,
 ];

@@ -33,6 +33,8 @@ const sourceLabels: Record<string, string> = {
   "awesome-claude-code": "Awesome Claude",
   "awesome-plugins": "Awesome Plugins",
   "local-marketplace": "Local",
+  curated: "Curated",
+  custom: "Custom",
 };
 
 export function MarketplaceCard({

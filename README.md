@@ -14,6 +14,7 @@ Built with the [T3 Stack](https://create.t3.gg/) -- Next.js 15, tRPC, Prisma, Ta
 - **Command management** -- Organize slash commands at the account and project level
 - **MCP server management** -- Discover and view MCP servers configured at the account level and provided by plugins (stdio and http types)
 - **Plugin system** -- View installed plugins and their contributed agents, skills, and commands
+- **Marketplace** -- Browse and install agents, skills, plugins, and MCP servers from multiple curated sources (Glama, MCP Registry, GitHub awesome lists, and more)
 - **Auto-scanning** -- Automatically scans your Claude Code directories to discover and sync configurations
 - **Deploy view** -- Overview of your deployment setup
 
@@ -102,6 +103,7 @@ claude-manager/
 │   │   ├── agents/           # Agent management
 │   │   ├── commands/         # Command management
 │   │   ├── deploy/           # Deployment view
+│   │   ├── marketplace/      # Marketplace discovery
 │   │   ├── mcp-servers/      # MCP server management
 │   │   ├── plugins/          # Plugin browser
 │   │   └── skills/           # Skills browser

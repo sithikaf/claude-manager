@@ -10,6 +10,8 @@ import { MarketplaceDetail } from "~/components/marketplace/marketplace-detail";
 import { InstallDialog } from "~/components/marketplace/install-dialog";
 import { MarketplaceFilters } from "~/components/marketplace/marketplace-filters";
 import { SyncStatus } from "~/components/marketplace/sync-status";
+import { AddCustomDialog } from "~/components/marketplace/add-custom-dialog";
+import { Button } from "~/components/ui/button";
 
 type SortType = "name" | "stars" | "downloads" | "recent";
 
@@ -25,6 +27,7 @@ export default function MarketplacePage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [installItemId, setInstallItemId] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showAddCustom, setShowAddCustom] = useState(false);
 
   // Debounce search
   useEffect(() => {
@@ -95,6 +98,15 @@ export default function MarketplacePage() {
     onError: (err) => toast.error(err.message),
   });
 
+  const addCustomMutation = api.marketplace.addCustomItem.useMutation({
+    onSuccess: () => {
+      toast.success("Custom item added to marketplace");
+      setShowAddCustom(false);
+      void utils.marketplace.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const totalItems = browse.data?.total ?? 0;
   const items = browse.data?.items ?? [];
   const totalPages = browse.data?.totalPages ?? 1;
@@ -103,7 +115,11 @@ export default function MarketplacePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Marketplace</h2>
-        <SyncStatus
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowAddCustom(true)}>
+            + Add Custom
+          </Button>
+          <SyncStatus
           sources={(sources.data ?? []).map((s) => ({
             ...s,
             error: s.error ?? null,
@@ -112,6 +128,7 @@ export default function MarketplacePage() {
           onRefresh={() => syncMutation.mutate({})}
           isSyncing={syncMutation.isPending}
         />
+        </div>
       </div>
 
       <Tabs value={category} onValueChange={setCategory}>
@@ -219,6 +236,13 @@ export default function MarketplacePage() {
           isPending={installMcpMutation.isPending || installPluginMutation.isPending}
         />
       )}
+      {/* Add Custom Dialog */}
+      <AddCustomDialog
+        open={showAddCustom}
+        onOpenChange={setShowAddCustom}
+        onSubmit={(data) => addCustomMutation.mutate(data)}
+        isPending={addCustomMutation.isPending}
+      />
     </div>
   );
 }
