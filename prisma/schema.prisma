@@ -9,14 +9,16 @@ datasource db {
 }
 
 model Account {
-    id         String      @id @default(cuid())
-    name       String
-    dirPath    String      @unique
-    agents     Agent[]
-    skills     Skill[]
-    commands   Command[]
-    plugins    Plugin[]
-    mcpServers McpServer[]
+    id          String      @id @default(cuid())
+    name        String
+    dirPath     String      @unique
+    displayName String?
+    email       String?
+    agents      Agent[]
+    skills      Skill[]
+    commands    Command[]
+    plugins     Plugin[]
+    mcpServers  McpServer[]
 }
 
 model Project {

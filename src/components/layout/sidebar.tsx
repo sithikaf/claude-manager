@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/accounts", label: "Accounts", icon: "Users" },
   { href: "/agents", label: "Agents", icon: "Bot" },
   { href: "/skills", label: "Skills", icon: "Zap" },
   { href: "/commands", label: "Commands", icon: "Terminal" },
@@ -20,6 +21,7 @@ const navItems = [
 
 const icons: Record<string, string> = {
   LayoutDashboard: "📊",
+  Users: "👥",
   Bot: "🤖",
   Zap: "⚡",
   Terminal: "💻",

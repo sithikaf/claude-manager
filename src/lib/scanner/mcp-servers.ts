@@ -17,34 +17,55 @@ export async function scanMcpServers(
   accountPath: string,
   scope: "account" | "plugin",
   pluginDir?: string,
+  includeGlobal = true,
 ): Promise<McpServerInfo[]> {
   const servers: McpServerInfo[] = [];
 
   if (scope === "account") {
-    // Read account-level MCP servers from settings.local.json
-    const settingsPath = path.join(accountPath, "settings.local.json");
-    try {
-      const raw = await fs.readFile(settingsPath, "utf-8");
-      const settings = JSON.parse(raw) as Record<string, unknown>;
-      const mcpServers = settings.mcpServers as Record<string, Record<string, unknown>> | undefined;
-      if (mcpServers && typeof mcpServers === "object") {
-        for (const [name, serverConfig] of Object.entries(mcpServers)) {
-          const type = (serverConfig.type as string) ?? (serverConfig.url ? "http" : "stdio");
-          servers.push({
-            name,
-            type,
-            command: serverConfig.command as string | undefined,
-            args: serverConfig.args ? JSON.stringify(serverConfig.args) : undefined,
-            url: serverConfig.url as string | undefined,
-            envVars: serverConfig.env ? JSON.stringify(serverConfig.env) : undefined,
-            filePath: settingsPath,
-            config: JSON.stringify(serverConfig, null, 2),
-            scope: "account",
-          });
-        }
+    // Read MCP servers from multiple config files
+    const configFiles = [
+      path.join(accountPath, "settings.local.json"),
+      path.join(accountPath, "settings.json"),
+      path.join(accountPath, ".mcp.json"),
+    ];
+
+    // Also check the global ~/.mcp.json
+    if (includeGlobal) {
+      const homeDir = process.env.HOME ?? "/home/fernando-server";
+      const globalMcpPath = path.join(homeDir, ".mcp.json");
+      if (!configFiles.includes(globalMcpPath)) {
+        configFiles.push(globalMcpPath);
       }
-    } catch {
-      // no settings.local.json or no mcpServers key
+    }
+
+    const seen = new Set<string>();
+    for (const configPath of configFiles) {
+      try {
+        const raw = await fs.readFile(configPath, "utf-8");
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const mcpServers = (parsed.mcpServers ?? parsed) as Record<string, Record<string, unknown>>;
+        if (mcpServers && typeof mcpServers === "object") {
+          for (const [name, serverConfig] of Object.entries(mcpServers)) {
+            if (typeof serverConfig !== "object" || serverConfig === null) continue;
+            if (seen.has(name)) continue;
+            seen.add(name);
+            const type = (serverConfig.type as string) ?? (serverConfig.url ? "http" : "stdio");
+            servers.push({
+              name,
+              type,
+              command: serverConfig.command as string | undefined,
+              args: serverConfig.args ? JSON.stringify(serverConfig.args) : undefined,
+              url: serverConfig.url as string | undefined,
+              envVars: serverConfig.env ? JSON.stringify(serverConfig.env) : undefined,
+              filePath: configPath,
+              config: JSON.stringify(serverConfig, null, 2),
+              scope: "account",
+            });
+          }
+        }
+      } catch {
+        // file doesn't exist or isn't valid JSON
+      }
     }
   } else if (scope === "plugin" && pluginDir) {
     // Read plugin-level MCP servers from .mcp.json

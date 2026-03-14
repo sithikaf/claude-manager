@@ -51,7 +51,10 @@ export default function DashboardPage() {
         {accounts.data?.map((account) => (
           <Card key={account.id}>
             <CardHeader>
-              <CardTitle className="text-base">{account.name}</CardTitle>
+              <CardTitle className="text-base">{account.displayName ?? account.name}</CardTitle>
+              {account.email && (
+                <p className="text-sm text-muted-foreground">{account.email}</p>
+              )}
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">

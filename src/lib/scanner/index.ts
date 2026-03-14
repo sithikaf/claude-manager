@@ -23,9 +23,10 @@ export async function runFullScan() {
   let totalItems = 0;
 
   // Upsert accounts
+  let firstAccount = true;
   for (const acc of accounts) {
     const account = await db.account.create({
-      data: { name: acc.name, dirPath: acc.dirPath },
+      data: { name: acc.name, dirPath: acc.dirPath, displayName: acc.displayName, email: acc.email },
     });
 
     // Scan account-level agents, skills, commands
@@ -81,8 +82,9 @@ export async function runFullScan() {
       totalItems++;
     }
 
-    // Scan account-level MCP servers
-    const mcpServers = await scanMcpServers(acc.dirPath, "account");
+    // Scan account-level MCP servers (include global ~/.mcp.json only for first account)
+    const mcpServers = await scanMcpServers(acc.dirPath, "account", undefined, firstAccount);
+    firstAccount = false;
     for (const mcp of mcpServers) {
       await db.mcpServer.create({
         data: {

@@ -25,6 +25,7 @@ export default function DeployPage() {
   const [targetAccount, setTargetAccount] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [deploying, setDeploying] = useState(false);
+  const [deployLog, setDeployLog] = useState<{ name: string; type: string; status: "pending" | "deploying" | "done" | "error" }[]>([]);
 
   const accounts = api.accounts.list.useQuery();
   const projects = api.commands.list.useQuery({ source: "project" });
@@ -85,22 +86,34 @@ export default function DeployPage() {
 
     try {
       const items = allItems.filter((i) => selectedItems.has(i.id));
-      for (const item of items) {
-        switch (item.type) {
-          case "agent":
-            await deployAgent.mutateAsync({ filePath: item.path, targetAccountDir });
-            break;
-          case "skill":
-            await deploySkill.mutateAsync({ dirPath: item.path, targetAccountDir });
-            break;
-          case "command":
-            await deployCommand.mutateAsync({ filePath: item.path, targetDir: targetAccountDir });
-            break;
-          case "plugin":
-            await deployPlugin.mutateAsync({ dirPath: item.path, targetAccountDir });
-            break;
+      setDeployLog(items.map((i) => ({ name: i.name, type: i.type, status: "pending" })));
+
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx]!;
+        setDeployLog((prev) => prev.map((entry, i) => i === idx ? { ...entry, status: "deploying" } : entry));
+
+        try {
+          switch (item.type) {
+            case "agent":
+              await deployAgent.mutateAsync({ filePath: item.path, targetAccountDir });
+              break;
+            case "skill":
+              await deploySkill.mutateAsync({ dirPath: item.path, targetAccountDir });
+              break;
+            case "command":
+              await deployCommand.mutateAsync({ filePath: item.path, targetDir: targetAccountDir });
+              break;
+            case "plugin":
+              await deployPlugin.mutateAsync({ dirPath: item.path, targetAccountDir });
+              break;
+          }
+          setDeployLog((prev) => prev.map((entry, i) => i === idx ? { ...entry, status: "done" } : entry));
+        } catch {
+          setDeployLog((prev) => prev.map((entry, i) => i === idx ? { ...entry, status: "error" } : entry));
+          throw new Error(`Failed to deploy ${item.type} "${item.name}"`);
         }
       }
+
       toast.success(`Deployed ${items.length} items successfully`);
       setSelectedItems(new Set());
     } catch (err) {
@@ -222,6 +235,31 @@ export default function DeployPage() {
                 ? "Deploying..."
                 : `Deploy ${selectedItems.size} item${selectedItems.size !== 1 ? "s" : ""}`}
             </Button>
+
+            {deployLog.length > 0 && (
+              <div className="mt-4 space-y-1 rounded-md border p-3">
+                <h4 className="mb-2 text-sm font-medium">
+                  {deploying ? "Deploying..." : deployLog.every((e) => e.status === "done") ? "Deploy complete" : "Deploy finished with errors"}
+                </h4>
+                {deployLog.map((entry, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="w-4 text-center">
+                      {entry.status === "pending" && "○"}
+                      {entry.status === "deploying" && "◌"}
+                      {entry.status === "done" && "✓"}
+                      {entry.status === "error" && "✗"}
+                    </span>
+                    <Badge variant="outline" className="text-xs">{entry.type}</Badge>
+                    <span className={entry.status === "error" ? "text-destructive" : entry.status === "done" ? "text-muted-foreground" : ""}>
+                      {entry.name}
+                    </span>
+                    {entry.status === "deploying" && (
+                      <span className="text-muted-foreground animate-pulse">deploying...</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
