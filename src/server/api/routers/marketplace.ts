@@ -4,7 +4,7 @@ import path from "path";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { syncSource, syncAllSources } from "~/lib/marketplace/sync";
 import { installPlugin } from "~/lib/plugins/install";
-import { isClaudeWorkspace } from "~/lib/workspaces";
+import { isClaudeWorkspace, parseSupportedProviders, stringifySupportedProviders } from "~/lib/workspaces";
 
 export const marketplaceRouter = createTRPCRouter({
   browse: publicProcedure
@@ -13,6 +13,7 @@ export const marketplaceRouter = createTRPCRouter({
         category: z.string().optional(),
         search: z.string().optional(),
         source: z.string().optional(),
+        provider: z.enum(["claude", "codex"]).optional(),
         sort: z.enum(["name", "stars", "downloads", "recent"]).optional(),
         page: z.number().min(1).default(1),
         pageSize: z.number().min(1).max(100).default(24),
@@ -48,17 +49,24 @@ export const marketplaceRouter = createTRPCRouter({
           orderBy.name = "asc";
       }
 
-      const [items, total] = await Promise.all([
-        ctx.db.marketplaceItem.findMany({
-          where,
-          orderBy,
-          skip: (page - 1) * pageSize,
-          take: pageSize,
-        }),
-        ctx.db.marketplaceItem.count({ where }),
-      ]);
+      const allItems = await ctx.db.marketplaceItem.findMany({
+        where,
+        orderBy,
+      });
+      const filteredItems = input?.provider
+        ? allItems.filter((item) =>
+            parseSupportedProviders(item.supportedProviders).includes(input.provider!),
+          )
+        : allItems;
+      const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
 
-      return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+      return {
+        items: pagedItems,
+        total: filteredItems.length,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(filteredItems.length / pageSize)),
+      };
     }),
 
   getItem: publicProcedure
@@ -97,12 +105,15 @@ export const marketplaceRouter = createTRPCRouter({
       });
       if (!item) throw new Error("Item not found");
       if (item.category !== "mcp-server") throw new Error("Item is not an MCP server");
+      if (!parseSupportedProviders(item.supportedProviders).includes("claude")) {
+        throw new Error("This MCP server is not marked as Claude-compatible");
+      }
 
       const account = await ctx.db.account.findUnique({
         where: { id: input.accountId },
       });
       if (!account) throw new Error("Account not found");
-      if (!isClaudeWorkspace(account.dirPath)) {
+      if (account.provider !== "claude" && !isClaudeWorkspace(account.dirPath)) {
         throw new Error("MCP installation currently supports Claude homes only");
       }
 
@@ -190,6 +201,11 @@ export const marketplaceRouter = createTRPCRouter({
           packageName: input.packageName ?? null,
           installCommand: input.installCommand ?? null,
           installConfig,
+          supportedProviders: stringifySupportedProviders(
+            input.category === "skill" || input.category === "mcp-server"
+              ? ["claude", "codex"]
+              : ["claude"],
+          ),
           tags: input.tags ? JSON.stringify(input.tags) : null,
         },
         update: {
@@ -201,6 +217,11 @@ export const marketplaceRouter = createTRPCRouter({
           packageName: input.packageName ?? null,
           installCommand: input.installCommand ?? null,
           installConfig,
+          supportedProviders: stringifySupportedProviders(
+            input.category === "skill" || input.category === "mcp-server"
+              ? ["claude", "codex"]
+              : ["claude"],
+          ),
           tags: input.tags ? JSON.stringify(input.tags) : null,
           fetchedAt: new Date(),
         },
@@ -231,7 +252,13 @@ export const marketplaceRouter = createTRPCRouter({
         where: { id: input.itemId },
       });
       if (!item) throw new Error("Item not found");
-      if (!isClaudeWorkspace(input.targetAccountDir)) {
+      if (!parseSupportedProviders(item.supportedProviders).includes("claude")) {
+        throw new Error("This plugin is not marked as Claude-compatible");
+      }
+      const account = await ctx.db.account.findFirst({
+        where: { dirPath: input.targetAccountDir },
+      });
+      if (account?.provider !== "claude" && !isClaudeWorkspace(input.targetAccountDir)) {
         throw new Error("Plugin installation currently supports Claude homes only");
       }
 

@@ -1,4 +1,6 @@
 export type WorkspaceProvider = "claude" | "codex" | "unknown";
+export type SupportedProvider = Exclude<WorkspaceProvider, "unknown">;
+export const SUPPORTED_PROVIDERS: SupportedProvider[] = ["claude", "codex"];
 
 export function getWorkspaceProvider(dirPath: string): WorkspaceProvider {
   const normalized = dirPath.replace(/\\/g, "/").toLowerCase();
@@ -23,7 +25,9 @@ export function isCodexWorkspace(dirPath: string) {
 }
 
 export function getWorkspaceProviderLabel(dirPath: string) {
-  const provider = getWorkspaceProvider(dirPath);
+  const provider = dirPath === "claude" || dirPath === "codex"
+    ? dirPath
+    : getWorkspaceProvider(dirPath);
   if (provider === "claude") return "Claude";
   if (provider === "codex") return "Codex";
   return "Unknown";
@@ -31,4 +35,32 @@ export function getWorkspaceProviderLabel(dirPath: string) {
 
 export function getWorkspaceDisplayName(name: string, displayName?: string | null) {
   return displayName?.trim() || name;
+}
+
+export function parseSupportedProviders(
+  raw: string | null | undefined,
+): SupportedProvider[] {
+  if (!raw) return ["claude"];
+
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    const providers = parsed.filter(
+      (value): value is SupportedProvider =>
+        value === "claude" || value === "codex",
+    );
+    return providers.length > 0 ? providers : ["claude"];
+  } catch {
+    return ["claude"];
+  }
+}
+
+export function stringifySupportedProviders(
+  providers: SupportedProvider[],
+) {
+  return JSON.stringify(
+    providers.filter(
+      (provider, index, all) =>
+        SUPPORTED_PROVIDERS.includes(provider) && all.indexOf(provider) === index,
+    ),
+  );
 }

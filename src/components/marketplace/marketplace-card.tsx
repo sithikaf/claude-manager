@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { getWorkspaceProviderLabel, parseSupportedProviders } from "~/lib/workspaces";
 
 interface MarketplaceCardProps {
   name: string;
@@ -14,6 +15,7 @@ interface MarketplaceCardProps {
   downloadCount?: number | null;
   transportType?: string | null;
   tags?: string | null;
+  supportedProviders?: string | null;
   onDetails: () => void;
   onInstall: () => void;
 }
@@ -47,10 +49,12 @@ export function MarketplaceCard({
   downloadCount,
   transportType,
   tags,
+  supportedProviders,
   onDetails,
   onInstall,
 }: MarketplaceCardProps) {
   const parsedTags = tags ? (JSON.parse(tags) as string[]).slice(0, 3) : [];
+  const providers = parseSupportedProviders(supportedProviders);
 
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-md">
@@ -74,6 +78,11 @@ export function MarketplaceCard({
           {transportType && (
             <Badge variant="outline" className="text-xs">{transportType}</Badge>
           )}
+          {providers.map((provider) => (
+            <Badge key={provider} variant="secondary" className="text-xs">
+              {getWorkspaceProviderLabel(provider)}
+            </Badge>
+          ))}
           {parsedTags.map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
           ))}

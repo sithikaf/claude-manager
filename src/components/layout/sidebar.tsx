@@ -10,6 +10,7 @@ import { toast } from "sonner";
 const navItems = [
   { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/accounts", label: "Workspaces", icon: "Users" },
+  { href: "/instructions", label: "Instructions", icon: "FileText" },
   { href: "/agents", label: "Agents", icon: "Bot" },
   { href: "/skills", label: "Skills", icon: "Zap" },
   { href: "/commands", label: "Commands", icon: "Terminal" },
@@ -22,6 +23,7 @@ const navItems = [
 const icons: Record<string, string> = {
   LayoutDashboard: "DB",
   Users: "WS",
+  FileText: "IN",
   Bot: "AG",
   Zap: "SK",
   Terminal: "CM",
@@ -48,7 +50,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="border-b p-4">
         <h1 className="text-lg font-bold">Claude + Codex Manager</h1>
-        <p className="text-xs text-muted-foreground">Workspaces, skills, commands, and MCP</p>
+        <p className="text-xs text-muted-foreground">Workspaces, instructions, skills, commands, and MCP</p>
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

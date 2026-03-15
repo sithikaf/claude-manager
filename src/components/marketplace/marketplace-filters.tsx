@@ -1,11 +1,14 @@
 "use client";
 
 import { Input } from "~/components/ui/input";
+import { ProviderSelect } from "~/components/filters/provider-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 interface MarketplaceFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
+  provider: string;
+  onProviderChange: (value: string) => void;
   source: string;
   onSourceChange: (value: string) => void;
   sort: string;
@@ -27,6 +30,8 @@ const sourceLabels: Record<string, string> = {
 export function MarketplaceFilters({
   search,
   onSearchChange,
+  provider,
+  onProviderChange,
   source,
   onSourceChange,
   sort,
@@ -41,6 +46,8 @@ export function MarketplaceFilters({
         onChange={(e) => onSearchChange(e.target.value)}
         className="w-64"
       />
+
+      <ProviderSelect value={provider} onValueChange={onProviderChange} className="w-40" />
 
       <Select value={source} onValueChange={(v) => onSourceChange(v ?? "all")}>
         <SelectTrigger className="w-48">

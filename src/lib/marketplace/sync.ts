@@ -1,6 +1,7 @@
 import { db } from "~/server/db";
 import { allFetchers } from "./sources";
 import type { MarketplaceItemInput } from "./types";
+import { stringifySupportedProviders } from "~/lib/workspaces";
 
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
@@ -96,6 +97,14 @@ export async function syncAllSources(
 }
 
 async function upsertItem(item: MarketplaceItemInput) {
+  const supportedProviders =
+    item.supportedProviders ??
+    (item.category === "skill"
+      ? ["claude", "codex"]
+      : item.category === "mcp-server"
+        ? ["claude", "codex"]
+        : ["claude"]);
+
   const data = {
     externalId: item.externalId,
     category: item.category,
@@ -113,6 +122,7 @@ async function upsertItem(item: MarketplaceItemInput) {
     packageName: item.packageName ?? null,
     installCommand: item.installCommand ?? null,
     installConfig: item.installConfig ? JSON.stringify(item.installConfig) : null,
+    supportedProviders: stringifySupportedProviders(supportedProviders),
     rawData: item.rawData ? JSON.stringify(item.rawData) : null,
     fetchedAt: new Date(),
   };

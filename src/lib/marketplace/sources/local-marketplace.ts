@@ -21,6 +21,7 @@ export const localMarketplaceFetcher: SourceFetcher = {
         author: p.author,
         version: p.version,
         tags: p.category ? [p.category] : undefined,
+        supportedProviders: ["claude"],
       }));
     } catch {
       return [];

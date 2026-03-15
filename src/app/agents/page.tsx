@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
+import { ProviderSelect } from "~/components/filters/provider-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
 import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
@@ -12,13 +13,20 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [providerFilter, setProviderFilter] = useState<string>("all");
   const setAccount = (v: string | null) => setAccountFilter(v ?? "all");
   const setSource = (v: string | null) => setSourceFilter(v ?? "all");
+  const setProvider = (value: string) => {
+    setProviderFilter(value);
+    setAccountFilter("all");
+  };
 
-  const accounts = api.accounts.list.useQuery();
+  const provider = providerFilter !== "all" ? providerFilter as "claude" | "codex" : undefined;
+  const accounts = api.accounts.list.useQuery({ provider });
   const agents = api.agents.list.useQuery({
     accountId: accountFilter !== "all" ? accountFilter : undefined,
     source: sourceFilter !== "all" ? sourceFilter : undefined,
+    provider,
   });
   const agentDetail = api.agents.getById.useQuery(
     { id: selectedAgent! },
@@ -33,6 +41,7 @@ export default function AgentsPage() {
           <Link href="/marketplace?category=agent" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
         </div>
         <div className="flex gap-2">
+          <ProviderSelect value={providerFilter} onValueChange={setProvider} />
           <Select value={accountFilter} onValueChange={setAccount}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All accounts" />
@@ -65,7 +74,7 @@ export default function AgentsPage() {
             description={agent.description}
             badges={[
               { label: getWorkspaceDisplayName(agent.account.name, agent.account.displayName), variant: "outline" },
-              { label: getWorkspaceProviderLabel(agent.account.dirPath), variant: "secondary" as const },
+              { label: getWorkspaceProviderLabel(agent.account.provider), variant: "secondary" as const },
               { label: agent.source },
               ...(agent.model ? [{ label: agent.model, variant: "secondary" as const }] : []),
               ...(agent.color ? [{ label: agent.color, variant: "outline" as const }] : []),
@@ -90,7 +99,7 @@ export default function AgentsPage() {
           title={agentDetail.data.name}
           badges={[
             { label: getWorkspaceDisplayName(agentDetail.data.account.name, agentDetail.data.account.displayName), variant: "outline" },
-            { label: getWorkspaceProviderLabel(agentDetail.data.account.dirPath), variant: "secondary" },
+            { label: getWorkspaceProviderLabel(agentDetail.data.account.provider), variant: "secondary" },
             { label: agentDetail.data.source },
           ]}
           content={agentDetail.data.content}

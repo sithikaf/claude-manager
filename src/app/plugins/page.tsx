@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "sonner";
 import Link from "next/link";
-import { getWorkspaceDisplayName, isClaudeWorkspace } from "~/lib/workspaces";
+import { ProviderSelect } from "~/components/filters/provider-select";
+import { getWorkspaceDisplayName } from "~/lib/workspaces";
 
 export default function PluginsPage() {
   const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null);
   const [accountFilter, setAccountFilter] = useState<string>("all");
+  const [providerFilter, setProviderFilter] = useState<string>("all");
   const [installTarget, setInstallTarget] = useState<string>("");
   const [installPluginName, setInstallPluginName] = useState<string | null>(null);
   const [copyTarget, setCopyTarget] = useState<string>("");
@@ -25,17 +27,23 @@ export default function PluginsPage() {
   const setAccount = (v: string | null) => setAccountFilter(v ?? "all");
   const setInstall = (v: string | null) => setInstallTarget(v ?? "");
   const setCopy = (v: string | null) => setCopyTarget(v ?? "");
+  const setProvider = (value: string) => {
+    setProviderFilter(value);
+    setAccountFilter("all");
+  };
 
-  const accounts = api.accounts.list.useQuery();
+  const provider = providerFilter !== "all" ? providerFilter as "claude" | "codex" : undefined;
+  const accounts = api.accounts.list.useQuery({ provider });
   const plugins = api.plugins.list.useQuery({
     accountId: accountFilter !== "all" ? accountFilter : undefined,
+    provider,
   });
   const marketplace = api.plugins.marketplace.useQuery();
   const pluginDetail = api.plugins.getById.useQuery(
     { id: selectedPlugin! },
     { enabled: !!selectedPlugin },
   );
-  const claudeAccounts = (accounts.data ?? []).filter((acc) => isClaudeWorkspace(acc.dirPath));
+  const claudeAccounts = (accounts.data ?? []).filter((acc) => acc.provider === "claude");
 
   const utils = api.useUtils();
 
@@ -65,16 +73,22 @@ export default function PluginsPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  const filteredMarketplace = marketplace.data?.filter((p) =>
-    !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMarketplace = providerFilter === "codex"
+    ? []
+    : marketplace.data?.filter((p) =>
+        !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  const marketplaceCount = filteredMarketplace?.length ?? 0;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Plugins</h2>
-        <Link href="/marketplace?category=plugin" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
+        <div className="flex items-center gap-2">
+          <ProviderSelect value={providerFilter} onValueChange={setProvider} />
+          <Link href="/marketplace?category=plugin" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
+        </div>
       </div>
 
       <Tabs defaultValue="installed">
@@ -83,7 +97,7 @@ export default function PluginsPage() {
             Installed ({plugins.data?.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="marketplace">
-            Marketplace ({marketplace.data?.length ?? 0})
+            Marketplace ({marketplaceCount})
           </TabsTrigger>
         </TabsList>
 
@@ -95,7 +109,7 @@ export default function PluginsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All accounts</SelectItem>
-                {claudeAccounts.map((acc) => (
+                {(accounts.data ?? []).map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
                 ))}
               </SelectContent>
@@ -149,6 +163,12 @@ export default function PluginsPage() {
               </Card>
             ))}
           </div>
+
+          {providerFilter === "codex" && plugins.data?.length === 0 && (
+            <p className="text-center text-muted-foreground">
+              Codex does not expose Claude-style plugins in this app yet.
+            </p>
+          )}
         </TabsContent>
 
         <TabsContent value="marketplace" className="space-y-4">
@@ -201,6 +221,12 @@ export default function PluginsPage() {
               </Card>
             ))}
           </div>
+
+          {providerFilter === "codex" && (
+            <p className="text-center text-muted-foreground">
+              Codex marketplace plugins are not modeled in this app yet.
+            </p>
+          )}
         </TabsContent>
       </Tabs>
 

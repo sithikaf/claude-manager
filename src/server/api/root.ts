@@ -7,6 +7,7 @@ import { pluginsRouter } from "~/server/api/routers/plugins";
 import { deployRouter } from "~/server/api/routers/deploy";
 import { mcpServersRouter } from "~/server/api/routers/mcp-servers";
 import { marketplaceRouter } from "~/server/api/routers/marketplace";
+import { instructionsRouter } from "~/server/api/routers/instructions";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 export const appRouter = createTRPCRouter({
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   deploy: deployRouter,
   mcpServers: mcpServersRouter,
   marketplace: marketplaceRouter,
+  instructions: instructionsRouter,
 });
 
 export type AppRouter = typeof appRouter;

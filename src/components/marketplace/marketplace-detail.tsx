@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/u
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { getWorkspaceProviderLabel, parseSupportedProviders } from "~/lib/workspaces";
 
 interface MarketplaceDetailProps {
   open: boolean;
@@ -25,12 +26,14 @@ interface MarketplaceDetailProps {
     installCommand?: string | null;
     installConfig?: string | null;
     tags?: string | null;
+    supportedProviders?: string | null;
   };
   onInstall: () => void;
 }
 
 export function MarketplaceDetail({ open, onOpenChange, item, onInstall }: MarketplaceDetailProps) {
   const parsedTags = item.tags ? (JSON.parse(item.tags) as string[]) : [];
+  const providers = parseSupportedProviders(item.supportedProviders);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,6 +45,9 @@ export function MarketplaceDetail({ open, onOpenChange, item, onInstall }: Marke
         <div className="flex flex-wrap gap-1">
           <Badge>{item.category}</Badge>
           <Badge variant="outline">{item.source}</Badge>
+          {providers.map((provider) => (
+            <Badge key={provider} variant="secondary">{getWorkspaceProviderLabel(provider)}</Badge>
+          ))}
           {item.version && <Badge variant="secondary">v{item.version}</Badge>}
           {item.transportType && <Badge variant="outline">{item.transportType}</Badge>}
           {parsedTags.map((tag) => (

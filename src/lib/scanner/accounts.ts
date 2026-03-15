@@ -1,11 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
 import { getHomeDir } from "~/lib/home-dir";
-import { getWorkspaceProvider } from "~/lib/workspaces";
+import { type WorkspaceProvider, getWorkspaceProvider } from "~/lib/workspaces";
 
 export interface AccountInfo {
   name: string;
   dirPath: string;
+  provider: WorkspaceProvider;
   displayName?: string;
   email?: string;
 }
@@ -47,6 +48,7 @@ export async function scanAccounts(): Promise<AccountInfo[]> {
       accounts.push({
         name: entryName,
         dirPath,
+        provider,
         displayName,
         email,
       });
@@ -58,6 +60,7 @@ export async function scanAccounts(): Promise<AccountInfo[]> {
       accounts.push({
         name: entryName,
         dirPath,
+        provider,
         displayName,
         email,
       });

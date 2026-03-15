@@ -12,7 +12,7 @@ import { MarketplaceFilters } from "~/components/marketplace/marketplace-filters
 import { SyncStatus } from "~/components/marketplace/sync-status";
 import { AddCustomDialog } from "~/components/marketplace/add-custom-dialog";
 import { Button } from "~/components/ui/button";
-import { isClaudeWorkspace } from "~/lib/workspaces";
+import { isClaudeWorkspace, parseSupportedProviders } from "~/lib/workspaces";
 
 type SortType = "name" | "stars" | "downloads" | "recent";
 
@@ -22,6 +22,7 @@ export default function MarketplacePage() {
 
   const [category, setCategory] = useState(initialCategory);
   const [search, setSearch] = useState("");
+  const [provider, setProvider] = useState("all");
   const [source, setSource] = useState("all");
   const [sort, setSort] = useState<SortType>("name");
   const [page, setPage] = useState(1);
@@ -42,13 +43,14 @@ export default function MarketplacePage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [category, source, sort]);
+  }, [category, provider, source, sort]);
 
   const utils = api.useUtils();
 
   const browse = api.marketplace.browse.useQuery({
     category: category !== "all" ? category : undefined,
     search: debouncedSearch || undefined,
+    provider: provider !== "all" ? provider as "claude" | "codex" : undefined,
     source: source !== "all" ? source : undefined,
     sort,
     page,
@@ -57,7 +59,6 @@ export default function MarketplacePage() {
 
   const sources = api.marketplace.sources.useQuery();
   const accounts = api.accounts.list.useQuery();
-  const claudeAccounts = (accounts.data ?? []).filter((account) => isClaudeWorkspace(account.dirPath));
 
   const selectedItem = api.marketplace.getItem.useQuery(
     { id: selectedItemId! },
@@ -68,6 +69,16 @@ export default function MarketplacePage() {
     { id: installItemId! },
     { enabled: !!installItemId },
   );
+  const installItemProviders = installItem.data
+    ? parseSupportedProviders(installItem.data.supportedProviders)
+    : [];
+  const selectedProvider =
+    provider !== "all"
+      ? provider as "claude" | "codex"
+      : (installItemProviders[0] ?? "claude");
+  const installableAccounts = selectedProvider === "claude"
+    ? (accounts.data ?? []).filter((account) => account.provider === "claude" || isClaudeWorkspace(account.dirPath))
+    : [];
 
   const syncMutation = api.marketplace.sync.useMutation({
     onSuccess: (data) => {
@@ -146,6 +157,8 @@ export default function MarketplacePage() {
       <MarketplaceFilters
         search={search}
         onSearchChange={setSearch}
+        provider={provider}
+        onProviderChange={setProvider}
         source={source}
         onSourceChange={setSource}
         sort={sort}
@@ -180,6 +193,7 @@ export default function MarketplacePage() {
             downloadCount={item.downloadCount}
             transportType={item.transportType}
             tags={item.tags}
+            supportedProviders={item.supportedProviders}
             onDetails={() => setSelectedItemId(item.id)}
             onInstall={() => setInstallItemId(item.id)}
           />
@@ -228,7 +242,8 @@ export default function MarketplacePage() {
           open={!!installItemId}
           onOpenChange={(open) => !open && setInstallItemId(null)}
           item={installItem.data}
-          accounts={claudeAccounts}
+          provider={selectedProvider}
+          accounts={installableAccounts}
           onInstallMcp={(itemId, accountId, envVars) =>
             installMcpMutation.mutate({ itemId, accountId, envVars })
           }

@@ -1,3 +1,5 @@
+import type { SupportedProvider } from "~/lib/workspaces";
+
 export interface MarketplaceItemInput {
   externalId: string;
   category: "skill" | "agent" | "mcp-server" | "plugin";
@@ -15,6 +17,7 @@ export interface MarketplaceItemInput {
   packageName?: string;
   installCommand?: string;
   installConfig?: Record<string, unknown>;
+  supportedProviders?: SupportedProvider[];
   rawData?: Record<string, unknown>;
 }
 

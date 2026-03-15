@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/u
 import { Button } from "~/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Input } from "~/components/ui/input";
-import { getWorkspaceDisplayName } from "~/lib/workspaces";
+import { getWorkspaceDisplayName, parseSupportedProviders } from "~/lib/workspaces";
 
 interface InstallDialogProps {
   open: boolean;
@@ -17,7 +17,9 @@ interface InstallDialogProps {
     installConfig?: string | null;
     installCommand?: string | null;
     repositoryUrl?: string | null;
+    supportedProviders?: string | null;
   };
+  provider: "claude" | "codex";
   accounts: { id: string; name: string; dirPath: string; displayName?: string | null }[];
   onInstallMcp: (itemId: string, accountId: string, envVars: Record<string, string>) => void;
   onInstallPlugin: (itemId: string, targetAccountDir: string) => void;
@@ -28,6 +30,7 @@ export function InstallDialog({
   open,
   onOpenChange,
   item,
+  provider,
   accounts,
   onInstallMcp,
   onInstallPlugin,
@@ -37,6 +40,12 @@ export function InstallDialog({
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
 
   const isMcp = item.category === "mcp-server";
+  const supportsSelectedProvider = parseSupportedProviders(item.supportedProviders).includes(provider);
+  const canAutoInstall =
+    supportsSelectedProvider &&
+    provider === "claude" &&
+    (isMcp || item.category === "plugin");
+
   // Parse env template from installConfig
   const envTemplate: Record<string, string> = {};
   if (isMcp && item.installConfig) {
@@ -54,6 +63,7 @@ export function InstallDialog({
   }
 
   const handleInstall = () => {
+    if (!canAutoInstall) return;
     if (!selectedAccount) return;
     if (isMcp) {
       const account = accounts.find((a) => a.id === selectedAccount);
@@ -64,7 +74,7 @@ export function InstallDialog({
     }
   };
 
-  const hasNoInstallPath = !isMcp && item.category !== "plugin";
+  const hasNoInstallPath = !canAutoInstall;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,7 +86,9 @@ export function InstallDialog({
         {hasNoInstallPath ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              This {item.category} can be installed manually from its repository:
+              {!supportsSelectedProvider
+                ? `This ${item.category} is not marked as compatible with ${provider}.`
+                : `This ${item.category} can be installed manually from its repository:`}
             </p>
             {item.repositoryUrl && (
               <a

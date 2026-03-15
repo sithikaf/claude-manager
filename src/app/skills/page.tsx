@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
+import { ProviderSelect } from "~/components/filters/provider-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
 import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
@@ -11,11 +12,18 @@ import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/worksp
 export default function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [accountFilter, setAccountFilter] = useState<string>("all");
+  const [providerFilter, setProviderFilter] = useState<string>("all");
   const setAccount = (v: string | null) => setAccountFilter(v ?? "all");
+  const setProvider = (value: string) => {
+    setProviderFilter(value);
+    setAccountFilter("all");
+  };
 
-  const accounts = api.accounts.list.useQuery();
+  const provider = providerFilter !== "all" ? providerFilter as "claude" | "codex" : undefined;
+  const accounts = api.accounts.list.useQuery({ provider });
   const skills = api.skills.list.useQuery({
     accountId: accountFilter !== "all" ? accountFilter : undefined,
+    provider,
   });
   const skillDetail = api.skills.getById.useQuery(
     { id: selectedSkill! },
@@ -29,17 +37,20 @@ export default function SkillsPage() {
           <h2 className="text-2xl font-bold">Skills</h2>
           <Link href="/marketplace?category=skill" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
         </div>
-        <Select value={accountFilter} onValueChange={setAccount}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="All accounts" />
-          </SelectTrigger>
-          <SelectContent>
+        <div className="flex gap-2">
+          <ProviderSelect value={providerFilter} onValueChange={setProvider} />
+          <Select value={accountFilter} onValueChange={setAccount}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All accounts" />
+            </SelectTrigger>
+            <SelectContent>
               <SelectItem value="all">All accounts</SelectItem>
               {accounts.data?.map((acc) => (
-              <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
+                <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -50,7 +61,7 @@ export default function SkillsPage() {
             description={skill.description}
             badges={[
               { label: getWorkspaceDisplayName(skill.account.name, skill.account.displayName), variant: "outline" },
-              { label: getWorkspaceProviderLabel(skill.account.dirPath), variant: "secondary" as const },
+              { label: getWorkspaceProviderLabel(skill.account.provider), variant: "secondary" as const },
               { label: skill.source },
               ...(skill.hasExamples ? [{ label: "examples", variant: "secondary" as const }] : []),
               ...(skill.hasScripts ? [{ label: "scripts", variant: "secondary" as const }] : []),
@@ -76,7 +87,7 @@ export default function SkillsPage() {
           title={skillDetail.data.name}
           badges={[
             { label: getWorkspaceDisplayName(skillDetail.data.account.name, skillDetail.data.account.displayName), variant: "outline" },
-            { label: getWorkspaceProviderLabel(skillDetail.data.account.dirPath), variant: "secondary" },
+            { label: getWorkspaceProviderLabel(skillDetail.data.account.provider), variant: "secondary" },
             { label: skillDetail.data.source },
           ]}
           content={skillDetail.data.content}

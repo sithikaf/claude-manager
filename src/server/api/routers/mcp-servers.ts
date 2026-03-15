@@ -3,12 +3,17 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const mcpServersRouter = createTRPCRouter({
   list: publicProcedure
-    .input(z.object({ accountId: z.string().optional(), scope: z.string().optional() }).optional())
+    .input(z.object({
+      accountId: z.string().optional(),
+      scope: z.string().optional(),
+      provider: z.enum(["claude", "codex"]).optional(),
+    }).optional())
     .query(async ({ ctx, input }) => {
       return await ctx.db.mcpServer.findMany({
         where: {
           ...(input?.accountId ? { accountId: input.accountId } : {}),
           ...(input?.scope ? { scope: input.scope } : {}),
+          ...(input?.provider ? { account: { provider: input.provider } } : {}),
         },
         include: { account: true, plugin: true },
       });

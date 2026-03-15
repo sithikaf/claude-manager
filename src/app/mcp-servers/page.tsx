@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
+import { ProviderSelect } from "~/components/filters/provider-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
 import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
@@ -12,11 +13,18 @@ export default function McpServersPage() {
   const [selectedServer, setSelectedServer] = useState<string | null>(null);
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [scopeFilter, setScopeFilter] = useState<string>("all");
+  const [providerFilter, setProviderFilter] = useState<string>("all");
+  const setProvider = (value: string) => {
+    setProviderFilter(value);
+    setAccountFilter("all");
+  };
 
-  const accounts = api.accounts.list.useQuery();
+  const provider = providerFilter !== "all" ? providerFilter as "claude" | "codex" : undefined;
+  const accounts = api.accounts.list.useQuery({ provider });
   const servers = api.mcpServers.list.useQuery({
     accountId: accountFilter !== "all" ? accountFilter : undefined,
     scope: scopeFilter !== "all" ? scopeFilter : undefined,
+    provider,
   });
   const serverDetail = api.mcpServers.getById.useQuery(
     { id: selectedServer! },
@@ -31,6 +39,7 @@ export default function McpServersPage() {
           <Link href="/marketplace?category=mcp-server" className="text-sm text-primary hover:underline">Browse Marketplace</Link>
         </div>
         <div className="flex gap-2">
+          <ProviderSelect value={providerFilter} onValueChange={setProvider} />
           <Select value={accountFilter} onValueChange={(v) => setAccountFilter(v ?? "all")}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All accounts" />
@@ -63,7 +72,7 @@ export default function McpServersPage() {
             description={server.type === "http" ? server.url : server.command}
             badges={[
               { label: getWorkspaceDisplayName(server.account.name, server.account.displayName), variant: "outline" },
-              { label: getWorkspaceProviderLabel(server.account.dirPath), variant: "secondary" as const },
+              { label: getWorkspaceProviderLabel(server.account.provider), variant: "secondary" as const },
               { label: server.type, variant: server.type === "http" ? "secondary" : "default" },
               { label: server.scope },
               ...(server.plugin ? [{ label: server.plugin.name, variant: "outline" as const }] : []),
@@ -89,7 +98,7 @@ export default function McpServersPage() {
           title={serverDetail.data.name}
           badges={[
             { label: getWorkspaceDisplayName(serverDetail.data.account.name, serverDetail.data.account.displayName), variant: "outline" },
-            { label: getWorkspaceProviderLabel(serverDetail.data.account.dirPath), variant: "secondary" },
+            { label: getWorkspaceProviderLabel(serverDetail.data.account.provider), variant: "secondary" },
             { label: serverDetail.data.type, variant: "secondary" },
             { label: serverDetail.data.scope },
           ]}

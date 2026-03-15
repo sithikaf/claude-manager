@@ -6,6 +6,7 @@ import { scanSkills } from "./skills";
 import { scanCommands } from "./commands";
 import { scanPlugins } from "./plugins";
 import { scanMcpServers } from "./mcp-servers";
+import { scanAccountInstructions, scanProjectInstructions } from "./instructions";
 
 export async function runFullScan() {
   const accounts = await scanAccounts();
@@ -17,6 +18,7 @@ export async function runFullScan() {
   await db.skill.deleteMany();
   await db.command.deleteMany();
   await db.plugin.deleteMany();
+  await db.instruction.deleteMany();
   await db.project.deleteMany();
   await db.account.deleteMany();
 
@@ -26,7 +28,13 @@ export async function runFullScan() {
   let firstAccount = true;
   for (const acc of accounts) {
     const account = await db.account.create({
-      data: { name: acc.name, dirPath: acc.dirPath, displayName: acc.displayName, email: acc.email },
+      data: {
+        name: acc.name,
+        dirPath: acc.dirPath,
+        provider: acc.provider,
+        displayName: acc.displayName,
+        email: acc.email,
+      },
     });
 
     // Scan account-level agents, skills, commands
@@ -76,6 +84,20 @@ export async function runFullScan() {
           filePath: cmd.filePath,
           content: cmd.content,
           source: "account",
+          accountId: account.id,
+        },
+      });
+      totalItems++;
+    }
+
+    const instructions = await scanAccountInstructions(acc.dirPath, acc.provider);
+    for (const instruction of instructions) {
+      await db.instruction.create({
+        data: {
+          name: instruction.name,
+          kind: instruction.kind,
+          filePath: instruction.filePath,
+          content: instruction.content,
           accountId: account.id,
         },
       });
@@ -196,7 +218,7 @@ export async function runFullScan() {
   // Upsert projects and their commands
   for (const proj of projects) {
     const project = await db.project.create({
-      data: { name: proj.name, dirPath: proj.dirPath },
+      data: { name: proj.name, dirPath: proj.dirPath, provider: proj.provider },
     });
 
     const commands = await scanCommands(proj.dirPath, "project");
@@ -208,6 +230,20 @@ export async function runFullScan() {
           filePath: cmd.filePath,
           content: cmd.content,
           source: "project",
+          projectId: project.id,
+        },
+      });
+      totalItems++;
+    }
+
+    const instructions = await scanProjectInstructions(proj.dirPath, proj.provider);
+    for (const instruction of instructions) {
+      await db.instruction.create({
+        data: {
+          name: instruction.name,
+          kind: instruction.kind,
+          filePath: instruction.filePath,
+          content: instruction.content,
           projectId: project.id,
         },
       });
