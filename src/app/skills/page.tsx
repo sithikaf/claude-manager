@@ -6,6 +6,7 @@ import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
+import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
 
 export default function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
@@ -33,12 +34,12 @@ export default function SkillsPage() {
             <SelectValue placeholder="All accounts" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All accounts</SelectItem>
-            {accounts.data?.map((acc) => (
-              <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              <SelectItem value="all">All accounts</SelectItem>
+              {accounts.data?.map((acc) => (
+              <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -48,7 +49,8 @@ export default function SkillsPage() {
             title={skill.name}
             description={skill.description}
             badges={[
-              { label: skill.account.name, variant: "outline" },
+              { label: getWorkspaceDisplayName(skill.account.name, skill.account.displayName), variant: "outline" },
+              { label: getWorkspaceProviderLabel(skill.account.dirPath), variant: "secondary" as const },
               { label: skill.source },
               ...(skill.hasExamples ? [{ label: "examples", variant: "secondary" as const }] : []),
               ...(skill.hasScripts ? [{ label: "scripts", variant: "secondary" as const }] : []),
@@ -73,7 +75,8 @@ export default function SkillsPage() {
           onOpenChange={(open) => !open && setSelectedSkill(null)}
           title={skillDetail.data.name}
           badges={[
-            { label: skillDetail.data.account.name, variant: "outline" },
+            { label: getWorkspaceDisplayName(skillDetail.data.account.name, skillDetail.data.account.displayName), variant: "outline" },
+            { label: getWorkspaceProviderLabel(skillDetail.data.account.dirPath), variant: "secondary" },
             { label: skillDetail.data.source },
           ]}
           content={skillDetail.data.content}

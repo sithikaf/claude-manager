@@ -12,6 +12,7 @@ import { MarketplaceFilters } from "~/components/marketplace/marketplace-filters
 import { SyncStatus } from "~/components/marketplace/sync-status";
 import { AddCustomDialog } from "~/components/marketplace/add-custom-dialog";
 import { Button } from "~/components/ui/button";
+import { isClaudeWorkspace } from "~/lib/workspaces";
 
 type SortType = "name" | "stars" | "downloads" | "recent";
 
@@ -56,6 +57,7 @@ export default function MarketplacePage() {
 
   const sources = api.marketplace.sources.useQuery();
   const accounts = api.accounts.list.useQuery();
+  const claudeAccounts = (accounts.data ?? []).filter((account) => isClaudeWorkspace(account.dirPath));
 
   const selectedItem = api.marketplace.getItem.useQuery(
     { id: selectedItemId! },
@@ -226,7 +228,7 @@ export default function MarketplacePage() {
           open={!!installItemId}
           onOpenChange={(open) => !open && setInstallItemId(null)}
           item={installItem.data}
-          accounts={accounts.data ?? []}
+          accounts={claudeAccounts}
           onInstallMcp={(itemId, accountId, envVars) =>
             installMcpMutation.mutate({ itemId, accountId, envVars })
           }

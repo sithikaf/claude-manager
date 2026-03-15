@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getHomeDir } from "~/lib/home-dir";
 
 export interface McpServerInfo {
   name: string;
@@ -31,7 +32,7 @@ export async function scanMcpServers(
 
     // Also check the global ~/.mcp.json
     if (includeGlobal) {
-      const homeDir = process.env.HOME ?? "/home/fernando-server";
+      const homeDir = getHomeDir();
       const globalMcpPath = path.join(homeDir, ".mcp.json");
       if (!configFiles.includes(globalMcpPath)) {
         configFiles.push(globalMcpPath);

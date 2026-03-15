@@ -8,8 +8,8 @@ import { Toaster } from "~/components/ui/sonner";
 import { SetupGate } from "~/components/setup/setup-gate";
 
 export const metadata: Metadata = {
-  title: "Claude Dashboard",
-  description: "Skills & Agents Manager",
+  title: "Claude + Codex Manager",
+  description: "Workspace manager for Claude and Codex",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

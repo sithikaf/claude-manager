@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
-  { href: "/accounts", label: "Accounts", icon: "Users" },
+  { href: "/accounts", label: "Workspaces", icon: "Users" },
   { href: "/agents", label: "Agents", icon: "Bot" },
   { href: "/skills", label: "Skills", icon: "Zap" },
   { href: "/commands", label: "Commands", icon: "Terminal" },
@@ -20,15 +20,15 @@ const navItems = [
 ];
 
 const icons: Record<string, string> = {
-  LayoutDashboard: "📊",
-  Users: "👥",
-  Bot: "🤖",
-  Zap: "⚡",
-  Terminal: "💻",
-  Puzzle: "🧩",
-  Server: "🔌",
-  Store: "🏪",
-  Rocket: "🚀",
+  LayoutDashboard: "DB",
+  Users: "WS",
+  Bot: "AG",
+  Zap: "SK",
+  Terminal: "CM",
+  Puzzle: "PL",
+  Server: "MP",
+  Store: "MK",
+  Rocket: "DP",
 };
 
 export function Sidebar() {
@@ -36,7 +36,7 @@ export function Sidebar() {
   const utils = api.useUtils();
   const scanMutation = api.scanner.scan.useMutation({
     onSuccess: (data) => {
-      toast.success(`Scan complete: ${data.totalItems} items found across ${data.accounts} accounts and ${data.projects} projects`);
+      toast.success(`Scan complete: ${data.totalItems} items found across ${data.accounts} workspaces and ${data.projects} projects`);
       void utils.invalidate();
     },
     onError: (err) => {
@@ -47,8 +47,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="border-b p-4">
-        <h1 className="text-lg font-bold">Claude Manager</h1>
-        <p className="text-xs text-muted-foreground">Agents, Skills & MCP Manager</p>
+        <h1 className="text-lg font-bold">Claude + Codex Manager</h1>
+        <p className="text-xs text-muted-foreground">Workspaces, skills, commands, and MCP</p>
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

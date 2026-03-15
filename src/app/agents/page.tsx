@@ -6,6 +6,7 @@ import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
+import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
 
 export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export default function AgentsPage() {
             <SelectContent>
               <SelectItem value="all">All accounts</SelectItem>
               {accounts.data?.map((acc) => (
-                <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -63,7 +64,8 @@ export default function AgentsPage() {
             title={agent.name}
             description={agent.description}
             badges={[
-              { label: agent.account.name, variant: "outline" },
+              { label: getWorkspaceDisplayName(agent.account.name, agent.account.displayName), variant: "outline" },
+              { label: getWorkspaceProviderLabel(agent.account.dirPath), variant: "secondary" as const },
               { label: agent.source },
               ...(agent.model ? [{ label: agent.model, variant: "secondary" as const }] : []),
               ...(agent.color ? [{ label: agent.color, variant: "outline" as const }] : []),
@@ -87,7 +89,8 @@ export default function AgentsPage() {
           onOpenChange={(open) => !open && setSelectedAgent(null)}
           title={agentDetail.data.name}
           badges={[
-            { label: agentDetail.data.account.name, variant: "outline" },
+            { label: getWorkspaceDisplayName(agentDetail.data.account.name, agentDetail.data.account.displayName), variant: "outline" },
+            { label: getWorkspaceProviderLabel(agentDetail.data.account.dirPath), variant: "secondary" },
             { label: agentDetail.data.source },
           ]}
           content={agentDetail.data.content}

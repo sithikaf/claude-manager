@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getHomeDir } from "~/lib/home-dir";
 
 export interface MarketplacePlugin {
   name: string;
@@ -12,7 +13,7 @@ export interface MarketplacePlugin {
 }
 
 const MARKETPLACE_JSON_PATH = path.join(
-  process.env.HOME ?? "/home/fernando-server",
+  getHomeDir(),
   ".claude",
   "plugins",
   "marketplaces",

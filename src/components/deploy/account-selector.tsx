@@ -1,11 +1,13 @@
 "use client";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { getWorkspaceDisplayName } from "~/lib/workspaces";
 
 interface Account {
   id: string;
   name: string;
   dirPath: string;
+  displayName?: string | null;
 }
 
 interface Project {
@@ -34,7 +36,7 @@ export function AccountSelector({ accounts, projects, value, onChange, label, sh
         <SelectContent>
           {accounts.map((acc) => (
             <SelectItem key={acc.dirPath} value={acc.dirPath}>
-              {acc.name}
+              {getWorkspaceDisplayName(acc.name, acc.displayName)}
             </SelectItem>
           ))}
           {showProjects && projects?.map((proj) => (

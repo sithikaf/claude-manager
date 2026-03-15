@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "sonner";
 import Link from "next/link";
+import { getWorkspaceDisplayName, isClaudeWorkspace } from "~/lib/workspaces";
 
 export default function PluginsPage() {
   const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export default function PluginsPage() {
     { id: selectedPlugin! },
     { enabled: !!selectedPlugin },
   );
+  const claudeAccounts = (accounts.data ?? []).filter((acc) => isClaudeWorkspace(acc.dirPath));
 
   const utils = api.useUtils();
 
@@ -93,8 +95,8 @@ export default function PluginsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All accounts</SelectItem>
-                {accounts.data?.map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                {claudeAccounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -106,7 +108,7 @@ export default function PluginsPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-base">{plugin.name}</CardTitle>
-                    <Badge variant="outline">{plugin.account.name}</Badge>
+                    <Badge variant="outline">{getWorkspaceDisplayName(plugin.account.name, plugin.account.displayName)}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -134,7 +136,8 @@ export default function PluginsPage() {
                       size="sm"
                       variant="destructive"
                       onClick={() => {
-                        if (confirm(`Uninstall ${plugin.name} from ${plugin.account.name}?`)) {
+                        const accountName = getWorkspaceDisplayName(plugin.account.name, plugin.account.displayName);
+                        if (confirm(`Uninstall ${plugin.name} from ${accountName}?`)) {
                           uninstallMutation.mutate({ pluginName: plugin.name, accountDir: plugin.account.dirPath });
                         }
                       }}
@@ -181,7 +184,8 @@ export default function PluginsPage() {
                   {plugin.installedIn.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {plugin.installedIn.map((dir) => {
-                        const accName = accounts.data?.find((a) => a.dirPath === dir)?.name ?? dir;
+                        const account = accounts.data?.find((a) => a.dirPath === dir);
+                        const accName = account ? getWorkspaceDisplayName(account.name, account.displayName) : dir;
                         return <Badge key={dir} variant="outline" className="text-xs">{accName}</Badge>;
                       })}
                     </div>
@@ -209,7 +213,7 @@ export default function PluginsPage() {
             </DialogHeader>
             <p className="text-sm text-muted-foreground">{pluginDetail.data.description}</p>
             <div className="flex flex-wrap gap-1">
-              <Badge variant="outline">{pluginDetail.data.account.name}</Badge>
+              <Badge variant="outline">{getWorkspaceDisplayName(pluginDetail.data.account.name, pluginDetail.data.account.displayName)}</Badge>
               {pluginDetail.data.category && <Badge variant="secondary">{pluginDetail.data.category}</Badge>}
             </div>
             <ScrollArea className="max-h-[40vh]">
@@ -256,8 +260,8 @@ export default function PluginsPage() {
               <SelectValue placeholder="Select target account..." />
             </SelectTrigger>
             <SelectContent>
-              {accounts.data?.map((acc) => (
-                <SelectItem key={acc.dirPath} value={acc.dirPath}>{acc.name}</SelectItem>
+              {claudeAccounts.map((acc) => (
+                <SelectItem key={acc.dirPath} value={acc.dirPath}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -285,10 +289,10 @@ export default function PluginsPage() {
               <SelectValue placeholder="Select target account..." />
             </SelectTrigger>
             <SelectContent>
-              {accounts.data
+              {claudeAccounts
                 ?.filter((acc) => acc.dirPath !== copyPlugin?.sourceDir)
                 .map((acc) => (
-                  <SelectItem key={acc.dirPath} value={acc.dirPath}>{acc.name}</SelectItem>
+                  <SelectItem key={acc.dirPath} value={acc.dirPath}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
                 ))}
             </SelectContent>
           </Select>

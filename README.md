@@ -1,6 +1,6 @@
-# Claude Manager
+# Claude + Codex Manager
 
-A web dashboard for managing [Claude Code](https://docs.anthropic.com/en/docs/claude-code) agents, skills, commands, and plugins across multiple accounts.
+A web dashboard for managing [Claude Code](https://docs.anthropic.com/en/docs/claude-code) workspaces and Codex homes from a single interface.
 
 Built with the [T3 Stack](https://create.t3.gg/) -- Next.js 15, tRPC, Prisma, Tailwind CSS, and shadcn/ui.
 
@@ -8,15 +8,25 @@ Built with the [T3 Stack](https://create.t3.gg/) -- Next.js 15, tRPC, Prisma, Ta
 
 ## Features
 
-- **Multi-account management** -- Manage Claude Code configurations across multiple accounts from a single dashboard
+- **Workspace management** -- Discover Claude Code accounts and Codex homes from a single dashboard
 - **Agent management** -- View, create, and edit custom agents with model selection, tools, and descriptions
-- **Skills browser** -- Browse and manage skills installed per account, including plugin-provided skills
+- **Skills browser** -- Browse and manage skills installed per workspace, including grouped Codex skills such as `.system/*`
 - **Command management** -- Organize slash commands at the account and project level
 - **MCP server management** -- Discover and view MCP servers configured at the account level and provided by plugins (stdio and http types)
 - **Plugin system** -- View installed plugins and their contributed agents, skills, and commands
 - **Marketplace** -- Browse and install agents, skills, plugins, and MCP servers from multiple curated sources (Glama, MCP Registry, GitHub awesome lists, and more)
 - **Auto-scanning** -- Automatically scans your Claude Code directories to discover and sync configurations
 - **Deploy view** -- Overview of your deployment setup
+
+## Codex Support
+
+Codex support currently focuses on discovery and visibility:
+
+- Scans the local `.codex` home as a workspace
+- Discovers installed Codex skills from grouped folders such as `.codex/skills/.system/*`
+- Detects project-level `.codex` directories alongside `.claude` directories
+
+Claude-specific install and deploy workflows, including plugins and marketplace MCP installation, remain Claude-focused for now.
 
 ## Tech Stack
 

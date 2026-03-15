@@ -6,6 +6,7 @@ import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import Link from "next/link";
+import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
 
 export default function McpServersPage() {
   const [selectedServer, setSelectedServer] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export default function McpServersPage() {
             <SelectContent>
               <SelectItem value="all">All accounts</SelectItem>
               {accounts.data?.map((acc) => (
-                <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -61,7 +62,8 @@ export default function McpServersPage() {
             title={server.name}
             description={server.type === "http" ? server.url : server.command}
             badges={[
-              { label: server.account.name, variant: "outline" },
+              { label: getWorkspaceDisplayName(server.account.name, server.account.displayName), variant: "outline" },
+              { label: getWorkspaceProviderLabel(server.account.dirPath), variant: "secondary" as const },
               { label: server.type, variant: server.type === "http" ? "secondary" : "default" },
               { label: server.scope },
               ...(server.plugin ? [{ label: server.plugin.name, variant: "outline" as const }] : []),
@@ -86,7 +88,8 @@ export default function McpServersPage() {
           onOpenChange={(open) => !open && setSelectedServer(null)}
           title={serverDetail.data.name}
           badges={[
-            { label: serverDetail.data.account.name, variant: "outline" },
+            { label: getWorkspaceDisplayName(serverDetail.data.account.name, serverDetail.data.account.displayName), variant: "outline" },
+            { label: getWorkspaceProviderLabel(serverDetail.data.account.dirPath), variant: "secondary" },
             { label: serverDetail.data.type, variant: "secondary" },
             { label: serverDetail.data.scope },
           ]}

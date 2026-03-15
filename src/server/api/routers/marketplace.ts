@@ -4,6 +4,7 @@ import path from "path";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { syncSource, syncAllSources } from "~/lib/marketplace/sync";
 import { installPlugin } from "~/lib/plugins/install";
+import { isClaudeWorkspace } from "~/lib/workspaces";
 
 export const marketplaceRouter = createTRPCRouter({
   browse: publicProcedure
@@ -101,6 +102,9 @@ export const marketplaceRouter = createTRPCRouter({
         where: { id: input.accountId },
       });
       if (!account) throw new Error("Account not found");
+      if (!isClaudeWorkspace(account.dirPath)) {
+        throw new Error("MCP installation currently supports Claude homes only");
+      }
 
       // Build server config from installConfig or defaults
       let serverConfig: Record<string, unknown>;
@@ -227,6 +231,9 @@ export const marketplaceRouter = createTRPCRouter({
         where: { id: input.itemId },
       });
       if (!item) throw new Error("Item not found");
+      if (!isClaudeWorkspace(input.targetAccountDir)) {
+        throw new Error("Plugin installation currently supports Claude homes only");
+      }
 
       if (item.source === "local-marketplace") {
         return await installPlugin(item.name, input.targetAccountDir);

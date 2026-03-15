@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { toast } from "sonner";
+import { getWorkspaceDisplayName, isClaudeWorkspace } from "~/lib/workspaces";
 
 type ItemType = "agent" | "skill" | "command" | "plugin";
 
@@ -29,6 +30,7 @@ export default function DeployPage() {
 
   const accounts = api.accounts.list.useQuery();
   const projects = api.commands.list.useQuery({ source: "project" });
+  const claudeAccounts = (accounts.data ?? []).filter((account) => isClaudeWorkspace(account.dirPath));
 
   const sourceAccountData = api.accounts.getById.useQuery(
     { id: sourceAccount },
@@ -56,7 +58,7 @@ export default function DeployPage() {
     }
   }
 
-  const targetAccountDir = accounts.data?.find((a) => a.id === targetAccount)?.dirPath;
+  const targetAccountDir = claudeAccounts.find((a) => a.id === targetAccount)?.dirPath;
 
   const toggleItem = (id: string) => {
     setSelectedItems((prev) => {
@@ -126,6 +128,9 @@ export default function DeployPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Deploy</h2>
+      <p className="text-sm text-muted-foreground">
+        Deploy currently targets Claude workspaces only. Codex support is scan-and-view for now.
+      </p>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Source */}
@@ -139,8 +144,8 @@ export default function DeployPage() {
                 <SelectValue placeholder="Select source..." />
               </SelectTrigger>
               <SelectContent>
-                {accounts.data?.map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                {claudeAccounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -202,10 +207,10 @@ export default function DeployPage() {
                 <SelectValue placeholder="Select target..." />
               </SelectTrigger>
               <SelectContent>
-                {accounts.data
+                {claudeAccounts
                   ?.filter((acc) => acc.id !== sourceAccount)
                   .map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                    <SelectItem key={acc.id} value={acc.id}>{getWorkspaceDisplayName(acc.name, acc.displayName)}</SelectItem>
                   ))}
               </SelectContent>
             </Select>
@@ -244,10 +249,10 @@ export default function DeployPage() {
                 {deployLog.map((entry, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span className="w-4 text-center">
-                      {entry.status === "pending" && "○"}
-                      {entry.status === "deploying" && "◌"}
-                      {entry.status === "done" && "✓"}
-                      {entry.status === "error" && "✗"}
+                      {entry.status === "pending" && "P"}
+                      {entry.status === "deploying" && "D"}
+                      {entry.status === "done" && "O"}
+                      {entry.status === "error" && "X"}
                     </span>
                     <Badge variant="outline" className="text-xs">{entry.type}</Badge>
                     <span className={entry.status === "error" ? "text-destructive" : entry.status === "done" ? "text-muted-foreground" : ""}>
@@ -266,3 +271,4 @@ export default function DeployPage() {
     </div>
   );
 }
+

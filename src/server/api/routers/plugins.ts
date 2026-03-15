@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { getMarketplaceCatalog } from "~/lib/plugins/marketplace";
 import { installPlugin, uninstallPlugin, copyPluginToAccount } from "~/lib/plugins/install";
+import { isClaudeWorkspace } from "~/lib/workspaces";
 
 export const pluginsRouter = createTRPCRouter({
   list: publicProcedure
@@ -28,19 +29,25 @@ export const pluginsRouter = createTRPCRouter({
 
   marketplace: publicProcedure.query(async ({ ctx }) => {
     const accounts = await ctx.db.account.findMany();
-    const accountDirs = accounts.map((a) => a.dirPath);
+    const accountDirs = accounts.map((a) => a.dirPath).filter(isClaudeWorkspace);
     return await getMarketplaceCatalog(accountDirs);
   }),
 
   install: publicProcedure
     .input(z.object({ pluginName: z.string(), targetAccountDir: z.string() }))
     .mutation(async ({ input }) => {
+      if (!isClaudeWorkspace(input.targetAccountDir)) {
+        throw new Error("Plugin installation currently supports Claude homes only");
+      }
       return await installPlugin(input.pluginName, input.targetAccountDir);
     }),
 
   uninstall: publicProcedure
     .input(z.object({ pluginName: z.string(), accountDir: z.string() }))
     .mutation(async ({ input }) => {
+      if (!isClaudeWorkspace(input.accountDir)) {
+        throw new Error("Plugin removal currently supports Claude homes only");
+      }
       await uninstallPlugin(input.pluginName, input.accountDir);
       return { success: true };
     }),
@@ -48,6 +55,9 @@ export const pluginsRouter = createTRPCRouter({
   copyToAccount: publicProcedure
     .input(z.object({ pluginName: z.string(), sourceAccountDir: z.string(), targetAccountDir: z.string() }))
     .mutation(async ({ input }) => {
+      if (!isClaudeWorkspace(input.sourceAccountDir) || !isClaudeWorkspace(input.targetAccountDir)) {
+        throw new Error("Plugin copy currently supports Claude homes only");
+      }
       return await copyPluginToAccount(input.pluginName, input.sourceAccountDir, input.targetAccountDir);
     }),
 });

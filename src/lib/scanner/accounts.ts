@@ -1,5 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
+import { getHomeDir } from "~/lib/home-dir";
+import { getWorkspaceProvider } from "~/lib/workspaces";
 
 export interface AccountInfo {
   name: string;
@@ -22,33 +24,67 @@ async function readClaudeJson(dirPath: string): Promise<{ displayName?: string; 
   }
 }
 
+async function readCodexAuth(dirPath: string): Promise<{ displayName?: string; email?: string }> {
+  try {
+    await fs.access(path.join(dirPath, "auth.json"));
+    return { displayName: "Codex Home" };
+  } catch {
+    return { displayName: "Codex Home" };
+  }
+}
+
 export async function scanAccounts(): Promise<AccountInfo[]> {
-  const homeDir = process.env.HOME ?? "/home/fernando-server";
+  const homeDir = getHomeDir();
   const entries = await fs.readdir(homeDir, { withFileTypes: true });
   const accounts: AccountInfo[] = [];
 
-  for (const entry of entries) {
-    if (entry.isDirectory() && entry.name.startsWith(".claude")) {
-      const dirPath = path.join(homeDir, entry.name);
+  const addAccount = async (entryName: string, dirPath: string) => {
+    if (accounts.find((account) => account.dirPath === dirPath)) return;
+
+    const provider = getWorkspaceProvider(dirPath);
+    if (provider === "claude") {
       const { displayName, email } = await readClaudeJson(dirPath);
       accounts.push({
-        name: entry.name,
+        name: entryName,
+        dirPath,
+        displayName,
+        email,
+      });
+      return;
+    }
+
+    if (provider === "codex") {
+      const { displayName, email } = await readCodexAuth(dirPath);
+      accounts.push({
+        name: entryName,
         dirPath,
         displayName,
         email,
       });
     }
+  };
+
+  for (const entry of entries) {
+    if (
+      entry.isDirectory() &&
+      (entry.name.startsWith(".claude") || entry.name === ".codex")
+    ) {
+      const dirPath = path.join(homeDir, entry.name);
+      await addAccount(entry.name, dirPath);
+    }
   }
 
   // Also check for symlinks
   for (const entry of entries) {
-    if (entry.isSymbolicLink() && entry.name.startsWith(".claude")) {
+    if (
+      entry.isSymbolicLink() &&
+      (entry.name.startsWith(".claude") || entry.name === ".codex")
+    ) {
       const dirPath = path.join(homeDir, entry.name);
       try {
         const stat = await fs.stat(dirPath);
-        if (stat.isDirectory() && !accounts.find((a) => a.dirPath === dirPath)) {
-          const { displayName, email } = await readClaudeJson(dirPath);
-          accounts.push({ name: entry.name, dirPath, displayName, email });
+        if (stat.isDirectory()) {
+          await addAccount(entry.name, dirPath);
         }
       } catch {
         // skip broken symlinks

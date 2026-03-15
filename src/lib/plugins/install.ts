@@ -1,8 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
+import { getHomeDir } from "~/lib/home-dir";
+import { isClaudeWorkspace } from "~/lib/workspaces";
 
 const MARKETPLACE_BASE = path.join(
-  process.env.HOME ?? "/home/fernando-server",
+  getHomeDir(),
   ".claude",
   "plugins",
   "marketplaces",
@@ -10,6 +12,10 @@ const MARKETPLACE_BASE = path.join(
 );
 
 export async function installPlugin(pluginName: string, targetAccountDir: string) {
+  if (!isClaudeWorkspace(targetAccountDir)) {
+    throw new Error("Plugin installation currently supports Claude homes only");
+  }
+
   const sourceDir = path.join(MARKETPLACE_BASE, "plugins", pluginName);
   const targetDir = path.join(
     targetAccountDir,
@@ -27,6 +33,10 @@ export async function installPlugin(pluginName: string, targetAccountDir: string
 }
 
 export async function uninstallPlugin(pluginName: string, accountDir: string) {
+  if (!isClaudeWorkspace(accountDir)) {
+    throw new Error("Plugin removal currently supports Claude homes only");
+  }
+
   const pluginDir = path.join(
     accountDir,
     "plugins",
@@ -39,6 +49,10 @@ export async function uninstallPlugin(pluginName: string, accountDir: string) {
 }
 
 export async function copyPluginToAccount(pluginName: string, sourceAccountDir: string, targetAccountDir: string) {
+  if (!isClaudeWorkspace(sourceAccountDir) || !isClaudeWorkspace(targetAccountDir)) {
+    throw new Error("Plugin copy currently supports Claude homes only");
+  }
+
   const sourceDir = path.join(
     sourceAccountDir,
     "plugins",

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/u
 import { Button } from "~/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Input } from "~/components/ui/input";
+import { getWorkspaceDisplayName } from "~/lib/workspaces";
 
 interface InstallDialogProps {
   open: boolean;
@@ -17,7 +18,7 @@ interface InstallDialogProps {
     installCommand?: string | null;
     repositoryUrl?: string | null;
   };
-  accounts: { id: string; name: string; dirPath: string }[];
+  accounts: { id: string; name: string; dirPath: string; displayName?: string | null }[];
   onInstallMcp: (itemId: string, accountId: string, envVars: Record<string, string>) => void;
   onInstallPlugin: (itemId: string, targetAccountDir: string) => void;
   isPending: boolean;
@@ -36,7 +37,6 @@ export function InstallDialog({
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
 
   const isMcp = item.category === "mcp-server";
-
   // Parse env template from installConfig
   const envTemplate: Record<string, string> = {};
   if (isMcp && item.installConfig) {
@@ -96,12 +96,12 @@ export function InstallDialog({
           <div className="space-y-4">
             <Select value={selectedAccount} onValueChange={(v) => setSelectedAccount(v ?? "")}>
               <SelectTrigger>
-                <SelectValue placeholder="Select target account..." />
+                <SelectValue placeholder="Select target Claude account..." />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>
-                    {acc.name}
+                    {getWorkspaceDisplayName(acc.name, acc.displayName)}
                   </SelectItem>
                 ))}
               </SelectContent>

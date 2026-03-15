@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { ItemCard } from "~/components/items/item-card";
 import { ItemDetailDialog } from "~/components/items/item-detail-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { getWorkspaceDisplayName, getWorkspaceProviderLabel } from "~/lib/workspaces";
 
 export default function CommandsPage() {
   const [selectedCommand, setSelectedCommand] = useState<string | null>(null);
@@ -45,7 +46,10 @@ export default function CommandsPage() {
             description={cmd.description}
             badges={[
               { label: cmd.source },
-              ...(cmd.account ? [{ label: cmd.account.name, variant: "outline" as const }] : []),
+              ...(cmd.account ? [
+                { label: getWorkspaceDisplayName(cmd.account.name, cmd.account.displayName), variant: "outline" as const },
+                { label: getWorkspaceProviderLabel(cmd.account.dirPath), variant: "secondary" as const },
+              ] : []),
               ...(cmd.project ? [{ label: cmd.project.name, variant: "secondary" as const }] : []),
               ...(cmd.plugin ? [{ label: cmd.plugin.name, variant: "secondary" as const }] : []),
             ]}

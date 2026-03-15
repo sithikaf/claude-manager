@@ -15,15 +15,43 @@ export interface SkillInfo {
   pluginDirPath?: string;
 }
 
+async function discoverSkillDirs(rootDir: string, depth = 2): Promise<string[]> {
+  const skillDirs: string[] = [];
+
+  try {
+    const entries = await fs.readdir(rootDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+
+      const candidateDir = path.join(rootDir, entry.name);
+      const skillFile = path.join(candidateDir, "SKILL.md");
+
+      try {
+        await fs.access(skillFile);
+        skillDirs.push(candidateDir);
+        continue;
+      } catch {
+        // recurse into grouped skill folders such as .system/openai-docs
+      }
+
+      if (depth > 0 && entry.isDirectory()) {
+        skillDirs.push(...(await discoverSkillDirs(candidateDir, depth - 1)));
+      }
+    }
+  } catch {
+    // no readable skills directory
+  }
+
+  return skillDirs;
+}
+
 export async function scanSkills(basePath: string, source: string, pluginDirPath?: string): Promise<SkillInfo[]> {
   const skillsDir = path.join(basePath, "skills");
   const skills: SkillInfo[] = [];
 
   try {
-    const entries = await fs.readdir(skillsDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-      const skillDir = path.join(skillsDir, entry.name);
+    const skillDirs = await discoverSkillDirs(skillsDir);
+    for (const skillDir of skillDirs) {
       const skillFile = path.join(skillDir, "SKILL.md");
       try {
         const raw = await fs.readFile(skillFile, "utf-8");
@@ -35,7 +63,7 @@ export async function scanSkills(basePath: string, source: string, pluginDirPath
         try { await fs.access(path.join(skillDir, "scripts")); hasScripts = true; } catch {}
 
         skills.push({
-          name: (data.name as string) ?? entry.name,
+          name: (data.name as string) ?? path.basename(skillDir),
           description: data.description as string | undefined,
           author: data.author as string | undefined,
           version: data.version as string | undefined,
